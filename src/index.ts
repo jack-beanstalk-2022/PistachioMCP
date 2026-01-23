@@ -1,3 +1,5 @@
+import { config } from "dotenv";
+import { resolve } from "path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
@@ -6,11 +8,15 @@ import {
     ListPromptsRequestSchema,
     GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { exampleTool } from "./tools/example.js";
+import { searchImageTool } from "./tools/search-image.js";
+import { searchIconTool } from "./tools/search-icon.js";
 import { examplePrompt } from "./prompts/example.js";
 import * as http from "http";
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+// Load .env.local file
+config({ path: resolve(process.cwd(), ".env.local") });
+
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
 async function main() {
     // Initialize the MCP server
@@ -32,28 +38,64 @@ async function main() {
         return {
             tools: [
                 {
-                    name: exampleTool.name,
-                    description: exampleTool.description,
-                    inputSchema: exampleTool.inputSchema, // SDK will convert Zod to JSON Schema
+                    name: searchImageTool.name,
+                    description: searchImageTool.description,
+                    inputSchema: searchImageTool.inputSchema, // SDK will convert Zod to JSON Schema
+                },
+                {
+                    name: searchIconTool.name,
+                    description: searchIconTool.description,
+                    inputSchema: searchIconTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
             ],
         };
     });
 
-    server.setRequestHandler(CallToolRequestSchema, (request) => {
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { name, arguments: args } = request.params;
 
-        if (name === exampleTool.name) {
+        if (name === searchImageTool.name) {
             try {
-                const typedArgs = exampleTool.inputSchema.parse(args);
-                const result = exampleTool.handler(typedArgs);
+                const parsedArgs = searchImageTool.inputSchema.parse(args);
+                const result = await searchImageTool.handler(parsedArgs);
                 return {
                     content: [
                         {
                             type: "text",
-                            text: JSON.stringify(result, null, 2),
+                            text: result.success
+                                ? result.output
+                                : `Error: ${result.output}`,
                         },
                     ],
+                    isError: !result.success,
+                };
+            } catch (error) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        }
+
+        if (name === searchIconTool.name) {
+            try {
+                const parsedArgs = searchIconTool.inputSchema.parse(args);
+                const result = await searchIconTool.handler(parsedArgs);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: result.success
+                                ? result.output
+                                : `Error: ${result.output}`,
+                        },
+                    ],
+                    isError: !result.success,
                 };
             } catch (error) {
                 return {
