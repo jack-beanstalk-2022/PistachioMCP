@@ -14,7 +14,7 @@ function initializeFirebaseApp(): App {
         return existingApps[0];
     }
 
-    const isDevEnv = process.env.NODE_ENV === "development";
+    const isDevEnv = process.env.NODE_ENV !== "production";
 
     // Set project ID in environment if not present,
     // as some SDK components (like applicationDefault) might look for it
@@ -99,4 +99,41 @@ export async function getCachedData<T>(
     });
 
     return freshData;
+}
+
+// ============================================================================
+// MCP Project Operations
+// ============================================================================
+
+const MCP_PROJECTS_COLLECTION = "mcpProjects";
+
+/**
+ * Firestore document data for an MCP project (as stored in Firestore)
+ */
+interface FirestoreMCPProjectData {
+    name: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+/**
+ * Create a new MCP project entry in Firestore
+ * @param projectName - Name of the project
+ * @returns The created project ID
+ */
+export async function createMCPProject(
+    projectName: string
+): Promise<string> {
+    const now = Timestamp.now();
+    const docRef = db.collection(MCP_PROJECTS_COLLECTION).doc();
+
+    const projectData: FirestoreMCPProjectData = {
+        name: projectName,
+        createdAt: now,
+        updatedAt: now,
+    };
+
+    await docRef.set(projectData);
+
+    return docRef.id;
 }

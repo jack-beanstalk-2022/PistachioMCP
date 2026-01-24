@@ -10,7 +10,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
-import { examplePrompt } from "./prompts/example.js";
+import { createRemoteProjectTool } from "./tools/create-remote-project.js";
+import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import * as http from "http";
 
 // Load .env.local file
@@ -46,6 +47,11 @@ async function main() {
                     name: searchIconTool.name,
                     description: searchIconTool.description,
                     inputSchema: searchIconTool.inputSchema, // SDK will convert Zod to JSON Schema
+                },
+                {
+                    name: createRemoteProjectTool.name,
+                    description: createRemoteProjectTool.description,
+                    inputSchema: createRemoteProjectTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
             ],
         };
@@ -110,6 +116,34 @@ async function main() {
             }
         }
 
+        if (name === createRemoteProjectTool.name) {
+            try {
+                const parsedArgs = createRemoteProjectTool.inputSchema.parse(args);
+                const result = await createRemoteProjectTool.handler(parsedArgs);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: result.success
+                                ? result.output
+                                : `Error: ${result.output}`,
+                        },
+                    ],
+                    isError: !result.success,
+                };
+            } catch (error) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        }
+
         throw new Error(`Unknown tool: ${name}`);
     });
 
@@ -118,9 +152,15 @@ async function main() {
         return {
             prompts: [
                 {
-                    name: examplePrompt.name,
-                    description: examplePrompt.description,
-                    arguments: examplePrompt.arguments, // SDK will convert Zod to JSON Schema
+                    name: createPistachioProjectPrompt.name,
+                    description: createPistachioProjectPrompt.description,
+                    arguments: [
+                        {
+                            name: "project_name",
+                            description: "The name of the project to create",
+                            type: "string",
+                        },
+                    ],
                 },
             ],
         };
@@ -129,11 +169,12 @@ async function main() {
     server.setRequestHandler(GetPromptRequestSchema, (request) => {
         const { name, arguments: args } = request.params;
 
-        if (name === examplePrompt.name) {
+        if (name === createPistachioProjectPrompt.name) {
             try {
-                const typedArgs = examplePrompt.arguments.parse(args);
-                const messages = examplePrompt.handler(typedArgs);
+                const typedArgs = createPistachioProjectPrompt.arguments.parse(args);
+                const messages = createPistachioProjectPrompt.handler(typedArgs);
                 return {
+                    description: createPistachioProjectPrompt.description,
                     messages,
                 };
             } catch (error) {
