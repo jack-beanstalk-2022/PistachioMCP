@@ -12,6 +12,7 @@ import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { createRemoteProjectTool } from "./tools/create-remote-project.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
+import { startSyncPrompt } from "./prompts/start-sync.js";
 import * as http from "http";
 
 // Load .env.local file
@@ -162,6 +163,11 @@ async function main() {
                         },
                     ],
                 },
+                {
+                    name: startSyncPrompt.name,
+                    description: startSyncPrompt.description,
+                    arguments: [],
+                },
             ],
         };
     });
@@ -175,6 +181,20 @@ async function main() {
                 const messages = createPistachioProjectPrompt.handler(typedArgs);
                 return {
                     description: createPistachioProjectPrompt.description,
+                    messages,
+                };
+            } catch (error) {
+                throw new Error(
+                    `Error generating prompt: ${error instanceof Error ? error.message : String(error)}`
+                );
+            }
+        }
+
+        if (name === startSyncPrompt.name) {
+            try {
+                const messages = startSyncPrompt.handler();
+                return {
+                    description: startSyncPrompt.description,
                     messages,
                 };
             } catch (error) {
