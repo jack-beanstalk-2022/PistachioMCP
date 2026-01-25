@@ -11,6 +11,7 @@ import {
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { createRemoteProjectTool } from "./tools/create-remote-project.js";
+import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import { startSyncPrompt } from "./prompts/start-sync.js";
 import * as http from "http";
@@ -53,6 +54,11 @@ async function main() {
                     name: createRemoteProjectTool.name,
                     description: createRemoteProjectTool.description,
                     inputSchema: createRemoteProjectTool.inputSchema, // SDK will convert Zod to JSON Schema
+                },
+                {
+                    name: remoteKdoctorTool.name,
+                    description: remoteKdoctorTool.description,
+                    inputSchema: remoteKdoctorTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
             ],
         };
@@ -121,6 +127,34 @@ async function main() {
             try {
                 const parsedArgs = createRemoteProjectTool.inputSchema.parse(args);
                 const result = await createRemoteProjectTool.handler(parsedArgs);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: result.success
+                                ? result.output
+                                : `Error: ${result.output}`,
+                        },
+                    ],
+                    isError: !result.success,
+                };
+            } catch (error) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        }
+
+        if (name === remoteKdoctorTool.name) {
+            try {
+                const parsedArgs = remoteKdoctorTool.inputSchema.parse(args);
+                const result = await remoteKdoctorTool.handler(parsedArgs);
                 return {
                     content: [
                         {
