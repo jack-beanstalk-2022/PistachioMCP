@@ -7,12 +7,14 @@ import {
     ListToolsRequestSchema,
     ListPromptsRequestSchema,
     GetPromptRequestSchema,
+    type ContentBlock,
 } from "@modelcontextprotocol/sdk/types.js";
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { createRemoteProjectTool } from "./tools/create-remote-project.js";
 import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
+import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import { startSyncPrompt } from "./prompts/start-sync.js";
 import * as http from "http";
@@ -65,6 +67,11 @@ async function main() {
                     name: remoteCleanProjectTool.name,
                     description: remoteCleanProjectTool.description,
                     inputSchema: remoteCleanProjectTool.inputSchema, // SDK will convert Zod to JSON Schema
+                },
+                {
+                    name: remoteTestAndroidTool.name,
+                    description: remoteTestAndroidTool.description,
+                    inputSchema: remoteTestAndroidTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
             ],
         };
@@ -198,6 +205,59 @@ async function main() {
                                 : `Error: ${result.output}`,
                         },
                     ],
+                    isError: !result.success,
+                };
+            } catch (error) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        }
+
+        if (name === remoteTestAndroidTool.name) {
+            try {
+                const parsedArgs = remoteTestAndroidTool.inputSchema.parse(args);
+                const result = await remoteTestAndroidTool.handler(parsedArgs);
+
+                const content: ContentBlock[] = [];
+
+                // Add the main output text
+                if (result.output) {
+                    content.push({
+                        type: "text",
+                        text: result.output,
+                    });
+                }
+
+                // Add screen recording as resource_link if available
+                if (result.screenrecord) {
+                    content.push({
+                        type: "resource_link",
+                        uri: result.screenrecord,
+                        name: "screen recording of the test",
+                        mimeType: "video/mp4",
+                    });
+                }
+
+                // Add image sequence as image blocks if available
+                if (result.images && result.images.length > 0) {
+                    for (const imageBase64 of result.images) {
+                        content.push({
+                            type: "image",
+                            data: imageBase64,
+                            mimeType: "image/jpeg",
+                        });
+                    }
+                }
+
+                return {
+                    content,
                     isError: !result.success,
                 };
             } catch (error) {

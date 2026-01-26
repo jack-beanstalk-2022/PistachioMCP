@@ -5,6 +5,8 @@ import {
     App,
 } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { Storage } from "@google-cloud/storage";
+import { randomUUID } from "crypto";
 
 function initializeFirebaseApp(): App {
     // Check if app is already initialized
@@ -136,4 +138,57 @@ export async function createMCPProject(
     await docRef.set(projectData);
 
     return docRef.id;
+}
+
+// ============================================================================
+// GCS Upload Operations
+// ============================================================================
+
+/**
+ * Upload a base64 PNG image to GCS and return the public URL
+ * Uses WEEKLY_EXPIRING bucket for temporary storage
+ */
+export async function uploadToGCSWeeklyExpiring(
+    base64: string,
+    userId: string
+): Promise<string | null> {
+    try {
+        // Convert base64 to buffer
+        const buffer = Buffer.from(base64, "base64");
+        const mimeType = "image/png";
+
+        // Initialize GCS storage
+        const storage = new Storage();
+
+        // Use WEEKLY_EXPIRING bucket for temporary storage
+        const bucketName =
+            process.env.GCS_BUCKET_WEEKLY_EXPIRING ||
+            "dev-pistachio-assets-weekly-expiring";
+
+        // Strip gs:// prefix if present
+        let finalBucketName = bucketName;
+        if (finalBucketName.startsWith("gs://")) {
+            finalBucketName = finalBucketName.substring(5);
+        }
+        const bucket = storage.bucket(finalBucketName);
+
+        // Generate filename with extension
+        const extension = mimeType.split("/")[1] || "png";
+        const filename = `${randomUUID()}.${extension}`;
+        const file = bucket.file(`${userId}/${filename}`);
+
+        // Upload the buffer to GCS
+        await file.save(buffer, {
+            metadata: {
+                contentType: mimeType,
+            },
+        });
+
+        // Return the public URL
+        const publicUrl = `https://storage.googleapis.com/${finalBucketName}/${userId}/${filename}`;
+        return publicUrl;
+    } catch (error) {
+        console.warn("Failed to upload to GCS:", error);
+        return null;
+    }
 }

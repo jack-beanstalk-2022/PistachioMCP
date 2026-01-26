@@ -26,7 +26,7 @@ export const createRemoteProjectTool = {
             const projectId = await createMCPProject(project_name);
 
             const documentsPath = join(homedir(), "Documents");
-            const cloneUrl = "https://github.com/Kotlin/KMP-App-Template.git";
+            const cloneUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
 
             // Execute git clone command
             const { stderr } = await execAsync(
