@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { remoteTestAndroidTool } from "./remote-test-android.js";
+import { remoteTestAndroidTool } from "../../tools/remote-test-android.js";
 import { exec } from "child_process";
 import * as fs from "fs";
 

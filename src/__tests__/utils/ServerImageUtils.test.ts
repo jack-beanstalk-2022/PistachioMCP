@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getImages, generateCacheKey } from "./ServerImageUtils.js";
-import { getCachedData } from "./ServerStorageUtils.js";
+import { getImages, generateCacheKey } from "../../utils/ServerImageUtils.js";
+import { getCachedData } from "../../utils/ServerStorageUtils.js";
 
 // Mock the getCachedData function
-vi.mock("./ServerStorageUtils.js", () => ({
+vi.mock("../../utils/ServerStorageUtils.js", () => ({
     getCachedData: vi.fn(),
 }));
 
