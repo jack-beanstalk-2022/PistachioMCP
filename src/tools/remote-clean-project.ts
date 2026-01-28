@@ -25,7 +25,7 @@ export const remoteCleanProjectTool = {
             const projectPath = join(documentsPath, project_id);
 
             // Execute ./gradlew clean command in the project directory
-            const { stdout, stderr } = await execAsync("./gradlew clean", {
+            const { stdout, stderr } = await execAsync("./gradlew --no-daemon clean", {
                 cwd: projectPath,
             });
 

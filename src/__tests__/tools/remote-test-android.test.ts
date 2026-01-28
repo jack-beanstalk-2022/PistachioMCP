@@ -267,11 +267,11 @@ describe("remoteTestAndroidTool", () => {
             mockExecResponse("List of devices attached\nemulator-5554\tdevice\n\n", "", false, "adb devices");
         });
 
-        it("should return error when ./gradlew installDebug fails", async () => {
-            mockExecResponse("", "Error", true, "installDebug");
+        it("should return error when ./gradlew assembleDebug fails", async () => {
+            mockExecResponse("", "Error", true, "assembleDebug");
             const result = await remoteTestAndroidTool.handler(testArgs);
             expect(result.success).toBe(false);
-            expect(result.output).toContain("Failed to install debug APK");
+            expect(result.output).toContain("Failed to assemble debug APK");
         });
 
         it("should return error when ./gradlew assembleDebugAndroidTest fails", async () => {

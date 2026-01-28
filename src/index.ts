@@ -17,12 +17,237 @@ import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
 import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import { startSyncPrompt } from "./prompts/start-sync.js";
+import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import * as http from "http";
 
 // Load .env.local file
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const NUM_WORKERS = process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS, 10) : 2;
+
+// Queue system for tool calls
+interface ToolTask {
+    name: string;
+    args: unknown;
+}
+
+/**
+ * Extracts project ID from tool task arguments.
+ * Returns the project_id if present, undefined otherwise.
+ */
+function extractProjectId(args: unknown): string | undefined {
+    if (args && typeof args === "object" && "project_id" in args) {
+        const projectId = (args as { project_id?: unknown }).project_id;
+        if (typeof projectId === "string") {
+            return projectId;
+        }
+    }
+    return undefined;
+}
+
+const toolCallQueue = new TaskQueue<ToolTask, { content: ContentBlock[]; isError: boolean }>(NUM_WORKERS);
+
+/**
+ * Handles the execution of a tool call
+ */
+async function handleToolCall(name: string, args: unknown): Promise<{ content: ContentBlock[]; isError: boolean }> {
+    if (name === searchImageTool.name) {
+        try {
+            const parsedArgs = searchImageTool.inputSchema.parse(args);
+            const result = await searchImageTool.handler(parsedArgs);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: result.success
+                            ? result.output
+                            : `Error: ${result.output}`,
+                    },
+                ],
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    if (name === searchIconTool.name) {
+        try {
+            const parsedArgs = searchIconTool.inputSchema.parse(args);
+            const result = await searchIconTool.handler(parsedArgs);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: result.success
+                            ? result.output
+                            : `Error: ${result.output}`,
+                    },
+                ],
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    if (name === createRemoteProjectTool.name) {
+        try {
+            const parsedArgs = createRemoteProjectTool.inputSchema.parse(args);
+            const result = await createRemoteProjectTool.handler(parsedArgs);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: result.success
+                            ? result.output
+                            : `Error: ${result.output}`,
+                    },
+                ],
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    if (name === remoteKdoctorTool.name) {
+        try {
+            const parsedArgs = remoteKdoctorTool.inputSchema.parse(args);
+            const result = await remoteKdoctorTool.handler(parsedArgs);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: result.success
+                            ? result.output
+                            : `Error: ${result.output}`,
+                    },
+                ],
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    if (name === remoteCleanProjectTool.name) {
+        try {
+            const parsedArgs = remoteCleanProjectTool.inputSchema.parse(args);
+            const result = await remoteCleanProjectTool.handler(parsedArgs);
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: result.success
+                            ? result.output
+                            : `Error: ${result.output}`,
+                    },
+                ],
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    if (name === remoteTestAndroidTool.name) {
+        try {
+            const parsedArgs = remoteTestAndroidTool.inputSchema.parse(args);
+            const result = await remoteTestAndroidTool.handler(parsedArgs);
+
+            const content: ContentBlock[] = [];
+
+            // Add the main output text
+            if (result.output) {
+                content.push({
+                    type: "text",
+                    text: result.output,
+                });
+            }
+
+            // Add screen recording as resource_link if available
+            if (result.screenrecord) {
+                content.push({
+                    type: "resource_link",
+                    uri: result.screenrecord,
+                    name: "screen recording of the test",
+                    mimeType: "video/mp4",
+                });
+            }
+
+            // Add image sequence as image blocks if available
+            if (result.images && result.images.length > 0) {
+                for (const imageBase64 of result.images) {
+                    content.push({
+                        type: "image",
+                        data: imageBase64,
+                        mimeType: "image/jpeg",
+                    });
+                }
+            }
+
+            return {
+                content,
+                isError: !result.success,
+            };
+        } catch (error) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
+    throw new Error(`Unknown tool: ${name}`);
+}
+
 
 async function main() {
     // Initialize the MCP server
@@ -80,200 +305,15 @@ async function main() {
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { name, arguments: args } = request.params;
 
-        if (name === searchImageTool.name) {
-            try {
-                const parsedArgs = searchImageTool.inputSchema.parse(args);
-                const result = await searchImageTool.handler(parsedArgs);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: result.success
-                                ? result.output
-                                : `Error: ${result.output}`,
-                        },
-                    ],
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
+        // Extract project ID from args if present
+        const projectId = extractProjectId(args);
 
-        if (name === searchIconTool.name) {
-            try {
-                const parsedArgs = searchIconTool.inputSchema.parse(args);
-                const result = await searchIconTool.handler(parsedArgs);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: result.success
-                                ? result.output
-                                : `Error: ${result.output}`,
-                        },
-                    ],
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
-
-        if (name === createRemoteProjectTool.name) {
-            try {
-                const parsedArgs = createRemoteProjectTool.inputSchema.parse(args);
-                const result = await createRemoteProjectTool.handler(parsedArgs);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: result.success
-                                ? result.output
-                                : `Error: ${result.output}`,
-                        },
-                    ],
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
-
-        if (name === remoteKdoctorTool.name) {
-            try {
-                const parsedArgs = remoteKdoctorTool.inputSchema.parse(args);
-                const result = await remoteKdoctorTool.handler(parsedArgs);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: result.success
-                                ? result.output
-                                : `Error: ${result.output}`,
-                        },
-                    ],
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
-
-        if (name === remoteCleanProjectTool.name) {
-            try {
-                const parsedArgs = remoteCleanProjectTool.inputSchema.parse(args);
-                const result = await remoteCleanProjectTool.handler(parsedArgs);
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: result.success
-                                ? result.output
-                                : `Error: ${result.output}`,
-                        },
-                    ],
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
-
-        if (name === remoteTestAndroidTool.name) {
-            try {
-                const parsedArgs = remoteTestAndroidTool.inputSchema.parse(args);
-                const result = await remoteTestAndroidTool.handler(parsedArgs);
-
-                const content: ContentBlock[] = [];
-
-                // Add the main output text
-                if (result.output) {
-                    content.push({
-                        type: "text",
-                        text: result.output,
-                    });
-                }
-
-                // Add screen recording as resource_link if available
-                if (result.screenrecord) {
-                    content.push({
-                        type: "resource_link",
-                        uri: result.screenrecord,
-                        name: "screen recording of the test",
-                        mimeType: "video/mp4",
-                    });
-                }
-
-                // Add image sequence as image blocks if available
-                if (result.images && result.images.length > 0) {
-                    for (const imageBase64 of result.images) {
-                        content.push({
-                            type: "image",
-                            data: imageBase64,
-                            mimeType: "image/jpeg",
-                        });
-                    }
-                }
-
-                return {
-                    content,
-                    isError: !result.success,
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-                        },
-                    ],
-                    isError: true,
-                };
-            }
-        }
-
-        throw new Error(`Unknown tool: ${name}`);
+        // Queue the tool call and wait for it to be processed
+        return toolCallQueue.enqueue(
+            { name, args },
+            async (task) => handleToolCall(task.name, task.args),
+            projectId
+        );
     });
 
     // Register prompts
