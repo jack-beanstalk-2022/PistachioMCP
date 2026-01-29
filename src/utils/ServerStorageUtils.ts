@@ -51,58 +51,6 @@ function initializeFirebaseApp(): App {
 export const app = initializeFirebaseApp();
 export const db = getFirestore(app);
 
-/**
- * Get or set cached data from Firestore
- * @param collectionName - The Firestore collection name
- * @param cacheKey - The document ID / cache key
- * @param fetchFn - Function to fetch fresh data if cache is expired/missing
- * @param cacheDurationMs - Cache duration in milliseconds (default: 12 months)
- * @returns The cached or freshly fetched data
- */
-export async function getCachedData<T>(
-    collectionName: string,
-    cacheKey: string,
-    fetchFn: () => Promise<T>,
-    cacheDurationMs: number = 12 * 30 * 24 * 60 * 60 * 1000 // 12 months
-): Promise<T> {
-    const docRef = db.collection(collectionName).doc(cacheKey);
-    const doc = await docRef.get();
-
-    const now = new Date();
-
-    if (doc.exists) {
-        const data = doc.data();
-        if (data) {
-            const expiresAt =
-                data.expiresAt instanceof Timestamp
-                    ? data.expiresAt.toDate()
-                    : new Date(data.expiresAt as string | number | Date);
-
-            // Check if cache is still valid
-            if (expiresAt > now) {
-                // Return cached data (excluding metadata)
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { createdAt, expiresAt, ...cachedData } = data;
-                return cachedData as T;
-            }
-        }
-    }
-
-    // Cache miss or expired - fetch fresh data
-    const freshData = await fetchFn();
-
-    // Store in cache
-    const expiresAt = new Date(now.getTime() + cacheDurationMs);
-
-    await docRef.set({
-        ...freshData,
-        createdAt: now,
-        expiresAt,
-    });
-
-    return freshData;
-}
-
 // ============================================================================
 // MCP Project Operations
 // ============================================================================

@@ -1,31 +1,38 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getImages, generateCacheKey } from "../../utils/ServerImageUtils.js";
-import { getCachedData } from "../../utils/ServerStorageUtils.js";
-
-// Mock the getCachedData function
-vi.mock("../../utils/ServerStorageUtils.js", () => ({
-    getCachedData: vi.fn(),
-}));
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { getImages } from "../../utils/ServerImageUtils.js";
 
 describe("getImages", () => {
-    const mockGetCachedData = vi.mocked(getCachedData);
+    const originalFetch = global.fetch;
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    // Helper to create mock cached image data
-    const createMockCachedImages = (count: number) => {
+    afterEach(() => {
+        global.fetch = originalFetch;
+    });
+
+    // Helper to create mock image data
+    const createMockImages = (count: number) => {
         return Array.from({ length: count }, (_, i) => ({
-            urls: {
-                regular: `https://example.com/regular-${i}.jpg`,
-                small: `https://example.com/small-${i}.jpg`,
-                thumb: `https://example.com/thumb-${i}.jpg`,
-            },
+            url: `https://example.com/image-${i}.jpg`,
             description: `Image ${i} description`,
             width: 1000 + i * 100,
             height: 800 + i * 50,
         }));
+    };
+
+    // Helper to mock fetch response
+    const mockFetchResponse = (images: ReturnType<typeof createMockImages>) => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({
+                success: true,
+                images,
+                count: images.length,
+            }),
+        } as Response);
     };
 
     describe("Input Validation", () => {
@@ -49,36 +56,24 @@ describe("getImages", () => {
             });
 
             it("should accept valid query string", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "nature",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("nature", 5, "landscape", "regular");
                 expect(result).toHaveLength(5);
             });
 
             it("should accept query with special characters", async () => {
-                const mockImages = createMockCachedImages(3);
-                mockGetCachedData.mockResolvedValue({
-                    query: "sunset & sunrise",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(3);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("sunset & sunrise", 3, "landscape", "regular");
                 expect(result).toHaveLength(3);
             });
 
             it("should accept query with URL-like strings", async () => {
-                const mockImages = createMockCachedImages(2);
-                mockGetCachedData.mockResolvedValue({
-                    query: "https://example.com",
-                    orientation: "portrait",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(2);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("https://example.com", 2, "portrait", "small");
                 expect(result).toHaveLength(2);
@@ -123,36 +118,24 @@ describe("getImages", () => {
             });
 
             it("should accept valid limit of 1", async () => {
-                const mockImages = createMockCachedImages(1);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(1);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 1, "landscape", "regular");
                 expect(result).toHaveLength(1);
             });
 
             it("should accept valid limit of 30", async () => {
-                const mockImages = createMockCachedImages(30);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(30);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 30, "landscape", "regular");
                 expect(result).toHaveLength(30);
             });
 
             it("should accept valid limit in the middle range", async () => {
-                const mockImages = createMockCachedImages(15);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(15);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 15, "landscape", "regular");
                 expect(result).toHaveLength(15);
@@ -179,36 +162,24 @@ describe("getImages", () => {
             });
 
             it("should accept landscape orientation", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "landscape", "regular");
                 expect(result).toHaveLength(5);
             });
 
             it("should accept portrait orientation", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "portrait",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "portrait", "regular");
                 expect(result).toHaveLength(5);
             });
 
             it("should accept squarish orientation", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "squarish",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "squarish", "regular");
                 expect(result).toHaveLength(5);
@@ -229,272 +200,127 @@ describe("getImages", () => {
             });
 
             it("should accept regular imageSize", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "landscape", "regular");
-                expect(result[0].url).toBe("https://example.com/regular-0.jpg");
+                expect(result[0].url).toBe("https://example.com/image-0.jpg");
             });
 
             it("should accept small imageSize", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "landscape", "small");
-                expect(result[0].url).toBe("https://example.com/small-0.jpg");
+                expect(result[0].url).toBe("https://example.com/image-0.jpg");
             });
 
             it("should accept thumb imageSize", async () => {
-                const mockImages = createMockCachedImages(5);
-                mockGetCachedData.mockResolvedValue({
-                    query: "test",
-                    orientation: "landscape",
-                    images: mockImages,
-                });
+                const mockImages = createMockImages(5);
+                mockFetchResponse(mockImages);
 
                 const result = await getImages("test", 5, "landscape", "thumb");
-                expect(result[0].url).toBe("https://example.com/thumb-0.jpg");
+                expect(result[0].url).toBe("https://example.com/image-0.jpg");
             });
         });
     });
 
-    describe("Cache Behavior", () => {
-        it("should call getCachedData with correct parameters on cache hit", async () => {
-            const mockImages = createMockCachedImages(10);
-            mockGetCachedData.mockResolvedValue({
-                query: "nature",
-                orientation: "landscape",
-                images: mockImages,
-            });
+    describe("API Integration", () => {
+        it("should call pistachio-ai.com/searchImages with correct parameters", async () => {
+            const mockImages = createMockImages(5);
+            mockFetchResponse(mockImages);
 
             await getImages("nature", 5, "landscape", "regular");
 
-            expect(mockGetCachedData).toHaveBeenCalledWith(
-                "unsplashCache",
-                "nature|landscape",
-                expect.any(Function),
-                12 * 30 * 24 * 60 * 60 * 1000
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.stringContaining("https://pistachio-ai.com/api/searchImages")
             );
+            const mockFetch = vi.mocked(global.fetch);
+            const callUrl = mockFetch.mock.calls[0]?.[0];
+            if (!callUrl || typeof callUrl !== "string") {
+                throw new Error("Expected fetch to be called with a string URL");
+            }
+            const url = new URL(callUrl);
+            expect(url.searchParams.get("query")).toBe("nature");
+            expect(url.searchParams.get("limit")).toBe("5");
+            expect(url.searchParams.get("orientation")).toBe("landscape");
+            expect(url.searchParams.get("imageSize")).toBe("regular");
         });
 
-        it("should use correct cache key for different query and orientation combinations", async () => {
-            const mockImages = createMockCachedImages(5);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "portrait",
-                images: mockImages,
-            });
+        it("should handle API errors", async () => {
+            global.fetch = vi.fn().mockResolvedValue({
+                ok: false,
+                status: 429,
+            } as Response);
 
-            await getImages("test", 5, "portrait", "regular");
-
-            expect(mockGetCachedData).toHaveBeenCalledWith(
-                "unsplashCache",
-                "test|portrait",
-                expect.any(Function),
-                expect.any(Number)
-            );
+            await expect(
+                getImages("test", 5, "landscape", "regular")
+            ).rejects.toThrow("API rate limit exceeded");
         });
 
-        it("should call fetchFn when cache misses", async () => {
-            let fetchFnCalled = false;
-            const mockImages = createMockCachedImages(5);
-
-            mockGetCachedData.mockImplementation(async (collection, key, fetchFn) => {
-                fetchFnCalled = true;
-                const result = await fetchFn();
-                return result;
-            });
-
-            // Mock fetchFromUnsplash by mocking fetch
-            const originalFetch = global.fetch;
+        it("should handle invalid API response format", async () => {
             global.fetch = vi.fn().mockResolvedValue({
                 ok: true,
                 status: 200,
                 json: () => Promise.resolve({
-                    total: 5,
-                    total_pages: 1,
-                    results: mockImages.map((img, i) => ({
-                        id: `photo-${i}`,
-                        width: img.width,
-                        height: img.height,
-                        description: img.description,
-                        alt_description: null,
-                        urls: {
-                            raw: `https://example.com/raw-${i}.jpg`,
-                            full: `https://example.com/full-${i}.jpg`,
-                            regular: img.urls.regular,
-                            small: img.urls.small,
-                            thumb: img.urls.thumb,
-                        },
-                    })),
+                    success: false,
                 }),
             } as Response);
 
-            // Set environment variable for fetchFromUnsplash
-            process.env.UNSPLASH_ACCESS_KEY = "test-key";
-
-            try {
-                await getImages("test", 5, "landscape", "regular");
-                expect(fetchFnCalled).toBe(true);
-            } finally {
-                global.fetch = originalFetch;
-                delete process.env.UNSPLASH_ACCESS_KEY;
-            }
-        });
-
-        it("should generate correct cache keys for all orientations", async () => {
-            const mockImages = createMockCachedImages(3);
-            const orientations = ["landscape", "portrait", "squarish"] as const;
-
-            for (const orientation of orientations) {
-                mockGetCachedData.mockResolvedValueOnce({
-                    query: "test",
-                    orientation,
-                    images: mockImages,
-                });
-
-                await getImages("test", 3, orientation, "regular");
-
-                expect(mockGetCachedData).toHaveBeenCalledWith(
-                    "unsplashCache",
-                    `test|${orientation}`,
-                    expect.any(Function),
-                    expect.any(Number)
-                );
-            }
+            await expect(
+                getImages("test", 5, "landscape", "regular")
+            ).rejects.toThrow("Invalid API response format");
         });
     });
 
     describe("Data Transformation", () => {
-        it("should slice images correctly when limit is less than available images", async () => {
-            const mockImages = createMockCachedImages(30);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+        it("should return images from API response", async () => {
+            const mockImages = createMockImages(5);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 5, "landscape", "regular");
             expect(result).toHaveLength(5);
-            expect(result[0].url).toBe("https://example.com/regular-0.jpg");
-            expect(result[4].url).toBe("https://example.com/regular-4.jpg");
+            expect(result[0].url).toBe("https://example.com/image-0.jpg");
+            expect(result[4].url).toBe("https://example.com/image-4.jpg");
         });
 
         it("should return all images when limit equals available images", async () => {
-            const mockImages = createMockCachedImages(30);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+            const mockImages = createMockImages(30);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 30, "landscape", "regular");
             expect(result).toHaveLength(30);
         });
 
-        it("should return fewer images when limit is greater than available images", async () => {
-            const mockImages = createMockCachedImages(10);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
-            const result = await getImages("test", 15, "landscape", "regular");
-            expect(result).toHaveLength(10);
-        });
-
-        it("should select correct URL size for regular", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
-            const result = await getImages("test", 3, "landscape", "regular");
-            result.forEach((img, i) => {
-                expect(img.url).toBe(`https://example.com/regular-${i}.jpg`);
-            });
-        });
-
-        it("should select correct URL size for small", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
-            const result = await getImages("test", 3, "landscape", "small");
-            result.forEach((img, i) => {
-                expect(img.url).toBe(`https://example.com/small-${i}.jpg`);
-            });
-        });
-
-        it("should select correct URL size for thumb", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
-            const result = await getImages("test", 3, "landscape", "thumb");
-            result.forEach((img, i) => {
-                expect(img.url).toBe(`https://example.com/thumb-${i}.jpg`);
-            });
-        });
-
         it("should preserve all image properties in result", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+            const mockImages = createMockImages(3);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 3, "landscape", "regular");
             expect(result[0]).toEqual({
-                url: "https://example.com/regular-0.jpg",
+                url: "https://example.com/image-0.jpg",
                 description: "Image 0 description",
                 width: 1000,
                 height: 800,
             });
             expect(result[1]).toEqual({
-                url: "https://example.com/regular-1.jpg",
+                url: "https://example.com/image-1.jpg",
                 description: "Image 1 description",
                 width: 1100,
                 height: 850,
             });
         });
 
-        it("should handle empty description in cached data", async () => {
+        it("should handle empty description", async () => {
             const mockImages = [
                 {
-                    urls: {
-                        regular: "https://example.com/regular-0.jpg",
-                        small: "https://example.com/small-0.jpg",
-                        thumb: "https://example.com/thumb-0.jpg",
-                    },
+                    url: "https://example.com/image-0.jpg",
                     description: "",
                     width: 1000,
                     height: 800,
                 },
             ];
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 1, "landscape", "regular");
             expect(result[0].description).toBe("");
@@ -503,130 +329,59 @@ describe("getImages", () => {
 
     describe("Edge Cases", () => {
         it("should handle limit of 1 correctly", async () => {
-            const mockImages = createMockCachedImages(30);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+            const mockImages = createMockImages(1);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 1, "landscape", "regular");
             expect(result).toHaveLength(1);
-            expect(result[0].url).toBe("https://example.com/regular-0.jpg");
+            expect(result[0].url).toBe("https://example.com/image-0.jpg");
         });
 
         it("should handle limit of 30 correctly", async () => {
-            const mockImages = createMockCachedImages(30);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
+            const mockImages = createMockImages(30);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("test", 30, "landscape", "regular");
             expect(result).toHaveLength(30);
-            expect(result[29].url).toBe("https://example.com/regular-29.jpg");
+            expect(result[29].url).toBe("https://example.com/image-29.jpg");
         });
 
-        it("should handle query with special characters in cache key", async () => {
-            const mockImages = createMockCachedImages(5);
-            mockGetCachedData.mockResolvedValue({
-                query: "test|query",
-                orientation: "landscape",
-                images: mockImages,
-            });
+        it("should handle query with special characters", async () => {
+            const mockImages = createMockImages(5);
+            mockFetchResponse(mockImages);
 
-            await getImages("test|query", 5, "landscape", "regular");
-            expect(mockGetCachedData).toHaveBeenCalledWith(
-                "unsplashCache",
-                "test|query|landscape",
-                expect.any(Function),
-                expect.any(Number)
-            );
+            const result = await getImages("test|query", 5, "landscape", "regular");
+            expect(result).toHaveLength(5);
         });
 
         it("should handle query with unicode characters", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "café 🎨",
-                orientation: "portrait",
-                images: mockImages,
-            });
+            const mockImages = createMockImages(3);
+            mockFetchResponse(mockImages);
 
             const result = await getImages("café 🎨", 3, "portrait", "small");
             expect(result).toHaveLength(3);
-            expect(mockGetCachedData).toHaveBeenCalledWith(
-                "unsplashCache",
-                "café 🎨|portrait",
-                expect.any(Function),
-                expect.any(Number)
-            );
         });
 
         it("should handle all three orientations with same query", async () => {
-            const mockImages = createMockCachedImages(5);
+            const mockImages = createMockImages(5);
             const orientations = ["landscape", "portrait", "squarish"] as const;
 
             for (const orientation of orientations) {
-                mockGetCachedData.mockResolvedValueOnce({
-                    query: "nature",
-                    orientation,
-                    images: mockImages,
-                });
-
+                mockFetchResponse(mockImages);
                 const result = await getImages("nature", 5, orientation, "regular");
                 expect(result).toHaveLength(5);
             }
-
-            expect(mockGetCachedData).toHaveBeenCalledTimes(3);
         });
 
-        it("should handle different image sizes with same cached data", async () => {
-            const mockImages = createMockCachedImages(3);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
+        it("should handle different image sizes", async () => {
+            const mockImages = createMockImages(3);
             const sizes = ["regular", "small", "thumb"] as const;
+
             for (const size of sizes) {
+                mockFetchResponse(mockImages);
                 const result = await getImages("test", 3, "landscape", size);
-                expect(result[0].url).toContain(size);
+                expect(result).toHaveLength(3);
             }
-        });
-
-        it("should handle single image in cache with limit of 1", async () => {
-            const mockImages = createMockCachedImages(1);
-            mockGetCachedData.mockResolvedValue({
-                query: "test",
-                orientation: "landscape",
-                images: mockImages,
-            });
-
-            const result = await getImages("test", 1, "landscape", "regular");
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                url: "https://example.com/regular-0.jpg",
-                description: "Image 0 description",
-                width: 1000,
-                height: 800,
-            });
-        });
-    });
-
-    describe("generateCacheKey", () => {
-        it("should generate correct cache key format", () => {
-            expect(generateCacheKey("test", "landscape")).toBe("test|landscape");
-        });
-
-        it("should handle special characters in query", () => {
-            expect(generateCacheKey("test|query", "landscape")).toBe("test|query|landscape");
-        });
-
-        it("should handle different orientations", () => {
-            expect(generateCacheKey("test", "portrait")).toBe("test|portrait");
-            expect(generateCacheKey("test", "squarish")).toBe("test|squarish");
         });
     });
 });

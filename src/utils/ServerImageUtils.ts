@@ -1,27 +1,3 @@
-import { getCachedData } from "./ServerStorageUtils.js";
-
-// Unsplash API response types
-interface UnsplashPhoto {
-    id: string;
-    width: number;
-    height: number;
-    description: string | null;
-    alt_description: string | null;
-    urls: {
-        raw: string;
-        full: string;
-        regular: string;
-        small: string;
-        thumb: string;
-    };
-}
-
-interface UnsplashSearchResponse {
-    total: number;
-    total_pages: number;
-    results: UnsplashPhoto[];
-}
-
 // Image size options
 export type ImageSize = "regular" | "small" | "thumb";
 
@@ -33,72 +9,14 @@ export interface ImageResult {
     height: number;
 }
 
-// Internal cached format with all URL sizes
-interface CachedImageResult {
-    urls: {
-        regular: string;
-        small: string;
-        thumb: string;
-    };
-    description: string;
-    width: number;
-    height: number;
+// API response format from pistachio-ai.com/searchImages
+interface SearchImagesResponse {
+    success: boolean;
+    images: ImageResult[];
+    count: number;
 }
 
-// Generate cache key from query and orientation
-export function generateCacheKey(query: string, orientation: string): string {
-    return `${query}|${orientation}`;
-}
-
-// Fetch images from Unsplash API
-async function fetchFromUnsplash(
-    query: string,
-    orientation: string
-): Promise<CachedImageResult[]> {
-    const accessKey = process.env.UNSPLASH_ACCESS_KEY;
-    if (!accessKey) {
-        throw new Error("UNSPLASH_ACCESS_KEY environment variable is not set");
-    }
-
-    // Build query parameters
-    const params = new URLSearchParams({
-        query,
-        per_page: "30",
-        page: "1",
-        orientation,
-    });
-
-    const url = `https://api.unsplash.com/search/photos?${params.toString()}`;
-
-    const response = await fetch(url, {
-        headers: {
-            Authorization: `Client-ID ${accessKey}`,
-        },
-    });
-
-    if (!response.ok) {
-        if (response.status === 429) {
-            throw new Error("Unsplash API rate limit exceeded");
-        }
-        throw new Error(`Unsplash API error: ${response.status}`);
-    }
-
-    const data = (await response.json()) as UnsplashSearchResponse;
-
-    // Transform to our format - save all URL sizes
-    return data.results.map((photo) => ({
-        urls: {
-            regular: photo.urls.regular,
-            small: photo.urls.small,
-            thumb: photo.urls.thumb,
-        },
-        description: photo.description || photo.alt_description || "",
-        width: photo.width,
-        height: photo.height,
-    }));
-}
-
-// Get images from cache or fetch from Unsplash
+// Fetch images from pistachio-ai.com/searchImages endpoint
 export async function getImages(
     query: string,
     limit: number,
@@ -136,28 +54,30 @@ export async function getImages(
         );
     }
 
-    const cacheKey = generateCacheKey(query, orientation);
+    // Build query parameters
+    const params = new URLSearchParams({
+        query,
+        limit: limit.toString(),
+        orientation,
+        imageSize,
+    });
 
-    // Use the generic cache function from ServerStorageUtils
-    const cacheData = await getCachedData<{
-        query: string;
-        orientation: string;
-        images: CachedImageResult[];
-    }>(
-        "unsplashCache",
-        cacheKey,
-        async () => {
-            const images = await fetchFromUnsplash(query, orientation);
-            return { query, orientation, images };
-        },
-        12 * 30 * 24 * 60 * 60 * 1000 // 12 months
-    );
+    const url = `https://pistachio-ai.com/api/searchImages?${params.toString()}`;
+    const response = await fetch(url);
 
-    // Return requested limit with the specified URL size
-    return cacheData.images.slice(0, limit).map((img) => ({
-        url: img.urls[imageSize],
-        description: img.description,
-        width: img.width,
-        height: img.height,
-    }));
+    if (!response.ok) {
+        if (response.status === 429) {
+            throw new Error("API rate limit exceeded");
+        }
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as SearchImagesResponse;
+
+    if (!data.success || !data.images) {
+        throw new Error("Invalid API response format");
+    }
+
+    // Return the images (already limited by the API)
+    return data.images;
 }
