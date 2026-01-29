@@ -18,6 +18,7 @@ import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import { startSyncPrompt } from "./prompts/start-sync.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
+import { updateProjectTimestamp } from "./utils/ServerStorageUtils.js";
 import * as http from "http";
 
 // Load .env.local file
@@ -140,6 +141,17 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         try {
             const parsedArgs = remoteKdoctorTool.inputSchema.parse(args);
             const result = await remoteKdoctorTool.handler(parsedArgs);
+
+            // Update project timestamp if successful
+            if (result.success && parsedArgs.project_id) {
+                try {
+                    await updateProjectTimestamp(parsedArgs.project_id);
+                } catch (error) {
+                    // Log but don't fail the tool call if timestamp update fails
+                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                }
+            }
+
             return {
                 content: [
                     {
@@ -168,6 +180,17 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         try {
             const parsedArgs = remoteCleanProjectTool.inputSchema.parse(args);
             const result = await remoteCleanProjectTool.handler(parsedArgs);
+
+            // Update project timestamp if successful
+            if (result.success && parsedArgs.project_id) {
+                try {
+                    await updateProjectTimestamp(parsedArgs.project_id);
+                } catch (error) {
+                    // Log but don't fail the tool call if timestamp update fails
+                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                }
+            }
+
             return {
                 content: [
                     {
@@ -196,6 +219,16 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         try {
             const parsedArgs = remoteTestAndroidTool.inputSchema.parse(args);
             const result = await remoteTestAndroidTool.handler(parsedArgs);
+
+            // Update project timestamp if successful
+            if (result.success && parsedArgs.project_id) {
+                try {
+                    await updateProjectTimestamp(parsedArgs.project_id);
+                } catch (error) {
+                    // Log but don't fail the tool call if timestamp update fails
+                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                }
+            }
 
             const content: ContentBlock[] = [];
 

@@ -1,55 +1,160 @@
-import {
-    initializeApp,
-    applicationDefault,
-    getApps,
-    App,
-} from "firebase-admin/app";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getFirestore, connectFirestoreEmulator, Firestore, Timestamp, collection, doc, setDoc, updateDoc } from "firebase/firestore";
+import { getAuth, connectAuthEmulator, signInAnonymously, Auth } from "firebase/auth";
 import { Storage } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
 
-function initializeFirebaseApp(): App {
+// Firebase configuration interface
+interface FirebaseConfig {
+    apiKey: string;
+    authDomain: string;
+    projectId: string;
+    storageBucket?: string;
+    messagingSenderId?: string;
+    appId?: string;
+    measurementId?: string;
+}
+
+// Global variables for Firebase app, auth, and firestore
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let authInitialized = false;
+
+/**
+ * Firebase configuration
+ */
+const firebaseConfig: FirebaseConfig = {
+    apiKey: "AIzaSyDjg3R6uloREIFpK3BVH9_jRXLALsS6PZ0",
+    authDomain: "adept-bastion-482216-k1.firebaseapp.com",
+    projectId: "adept-bastion-482216-k1",
+    storageBucket: "adept-bastion-482216-k1.firebasestorage.app",
+    messagingSenderId: "511506915846",
+    appId: "1:511506915846:web:77084d165e9a197210d987",
+    measurementId: "G-3GHH7D20ES",
+};
+
+/**
+ * Initialize Firebase app and authenticate anonymously
+ */
+async function initializeFirebaseApp(): Promise<FirebaseApp> {
     // Check if app is already initialized
     const existingApps = getApps();
     if (existingApps.length > 0) {
-        // Return the first existing app
-        return existingApps[0];
+        app = existingApps[0];
+        // Ensure auth and db are initialized
+        if (!auth) {
+            auth = getAuth(app);
+        }
+        if (!db) {
+            db = getFirestore(app);
+        }
+        // Ensure authentication is done
+        if (!authInitialized) {
+            await ensureAuthenticated();
+        }
+        return app;
     }
 
     const isDevEnv = process.env.NODE_ENV !== "production";
 
-    // Set project ID in environment if not present,
-    // as some SDK components (like applicationDefault) might look for it
-    if (!process.env.GCLOUD_PROJECT) {
-        process.env.GCLOUD_PROJECT = "adept-bastion-482216-k1";
-    }
-    if (!process.env.GOOGLE_CLOUD_PROJECT) {
-        process.env.GOOGLE_CLOUD_PROJECT = "adept-bastion-482216-k1";
-    }
+    // Initialize the app
+    app = initializeApp(firebaseConfig);
 
-    // Configure Firestore emulator for dev environment
-    // The Admin SDK automatically uses FIRESTORE_EMULATOR_HOST
-    if (isDevEnv && !process.env.FIRESTORE_EMULATOR_HOST) {
-        process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
-    }
+    // Initialize Auth
+    auth = getAuth(app);
 
     // Configure Auth emulator for dev environment
-    // The Admin SDK automatically uses FIREBASE_AUTH_EMULATOR_HOST
-    if (isDevEnv && !process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = "localhost:9099";
+    if (isDevEnv) {
+        const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST || "localhost:9099";
+        try {
+            connectAuthEmulator(auth, `http://${authEmulatorHost}`, { disableWarnings: true });
+        } catch (error) {
+            // Emulator already connected, ignore
+            if (error instanceof Error && !error.message.includes("already been initialized")) {
+                throw error;
+            }
+        }
     }
 
-    // Initialize the app
-    const app = initializeApp({
-        credential: applicationDefault(),
-    });
+    // Initialize Firestore
+    db = getFirestore(app);
+
+    // Configure Firestore emulator for dev environment
+    if (isDevEnv) {
+        const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST || "localhost:8080";
+        const [host, port] = firestoreEmulatorHost.split(":");
+        try {
+            connectFirestoreEmulator(db, host, parseInt(port, 10));
+        } catch (error) {
+            // Emulator already connected, ignore
+            if (error instanceof Error && !error.message.includes("already been initialized")) {
+                throw error;
+            }
+        }
+    }
+
+    // Authenticate anonymously
+    await ensureAuthenticated();
 
     return app;
 }
 
-// Initialize Firebase app
-export const app = initializeFirebaseApp();
-export const db = getFirestore(app);
+/**
+ * Ensure user is authenticated (sign in anonymously if not)
+ */
+async function ensureAuthenticated(): Promise<void> {
+    if (!auth) {
+        throw new Error("Auth not initialized. Call initializeFirebaseApp() first.");
+    }
+
+    if (authInitialized) {
+        return;
+    }
+
+    // Check if user is already signed in
+    if (auth.currentUser) {
+        authInitialized = true;
+        return;
+    }
+
+    // Sign in anonymously
+    try {
+        await signInAnonymously(auth);
+        authInitialized = true;
+    } catch (error) {
+        throw new Error(`Failed to authenticate anonymously: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+/**
+ * Get initialized Firebase app (initializes if needed)
+ */
+export async function getFirebaseApp(): Promise<FirebaseApp> {
+    if (!app) {
+        return await initializeFirebaseApp();
+    }
+    if (!authInitialized) {
+        await ensureAuthenticated();
+    }
+    return app;
+}
+
+/**
+ * Get initialized Firestore instance (initializes if needed)
+ */
+export async function getFirestoreDb(): Promise<Firestore> {
+    if (!db) {
+        await initializeFirebaseApp();
+    }
+    if (!db) {
+        throw new Error("Failed to initialize Firestore");
+    }
+    if (!authInitialized) {
+        await ensureAuthenticated();
+    }
+    return db;
+}
 
 // ============================================================================
 // MCP Project Operations
@@ -74,8 +179,12 @@ interface FirestoreMCPProjectData {
 export async function createMCPProject(
     projectName: string
 ): Promise<string> {
+    const firestore = await getFirestoreDb();
     const now = Timestamp.now();
-    const docRef = db.collection(MCP_PROJECTS_COLLECTION).doc();
+
+    // Use client SDK modular API: collection() and doc() with auto-generated ID
+    const collectionRef = collection(firestore, MCP_PROJECTS_COLLECTION);
+    const docRef = doc(collectionRef);
 
     const projectData: FirestoreMCPProjectData = {
         name: projectName,
@@ -83,9 +192,26 @@ export async function createMCPProject(
         updatedAt: now,
     };
 
-    await docRef.set(projectData);
+    await setDoc(docRef, projectData);
 
     return docRef.id;
+}
+
+/**
+ * Update the updatedAt timestamp for a project
+ * @param projectId - The ID of the project to update
+ */
+export async function updateProjectTimestamp(
+    projectId: string
+): Promise<void> {
+    const firestore = await getFirestoreDb();
+    const now = Timestamp.now();
+
+    const docRef = doc(firestore, MCP_PROJECTS_COLLECTION, projectId);
+
+    await updateDoc(docRef, {
+        updatedAt: now,
+    });
 }
 
 // ============================================================================
