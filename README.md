@@ -1,245 +1,203 @@
 # Pistachio MCP Server
 
-A remote MCP (Model Context Protocol) server built with Node.js and TypeScript. This server demonstrates how to implement tool calls and prompt templates using the official `@modelcontextprotocol/sdk` with HTTP transport for remote access.
+A remote MCP (Model Context Protocol) server built with Node.js and TypeScript for mobile app development. This server provides tools and prompts for remote project management, testing, and asset search.
 
-## Features
+## Prerequisites
 
-- **Tool Calls**: Register and handle tools that can be invoked by AI models
-- **Prompt Templates**: Create reusable prompt templates with argument support
-- **TypeScript**: Full type safety with Zod schema validation
-- **Remote HTTP Transport**: Streamable HTTP transport for remote MCP server access
-- **CORS Support**: Built-in CORS handling for web-based clients
+Before setting up this repository, ensure you have the following installed:
 
-## Installation
+- **Node.js** (v20 or higher)
+- **Yarn** (v4.10.3 or compatible version)
+- **Git**
 
-1. Install dependencies:
+## Setup Instructions
+
+### 1. Clone the Repository
+
 ```bash
-npm install
+git clone <repository-url>
+cd pistachio-mcp
 ```
 
-2. Build the project (optional, for production):
+### 2. Install Yarn (if not already installed)
+
+This project uses Yarn 4.10.3 as the package manager. If you don't have Yarn installed or need to upgrade:
+
 ```bash
-npm run build
+# Install Yarn globally (if needed)
+npm install -g yarn
+
+# Or use Corepack (recommended for Node.js 16.10+)
+corepack enable
+corepack prepare yarn@4.10.3 --activate
 ```
 
-## Usage
+### 3. Install Dependencies
+
+Install all project dependencies using Yarn:
+
+```bash
+yarn install
+```
+
+This will install all dependencies listed in `package.json`, including:
+- `@modelcontextprotocol/sdk` - MCP SDK
+- `firebase` - Firebase SDK for Firestore and Auth
+- `@google-cloud/storage` - Google Cloud Storage client
+- `zod` - Schema validation
+- TypeScript and development dependencies
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the root directory (if needed for custom configuration):
+
+```bash
+# Optional: Set custom port (default: 3001)
+PORT=3001
+
+# Optional: Set number of worker threads (default: 2)
+NUM_WORKERS=2
+
+# Optional: Set Node environment
+NODE_ENV=development
+
+# Optional: Firebase emulator configuration (for development)
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
+FIRESTORE_EMULATOR_HOST=localhost:8080
+
+# Optional: Google Cloud Storage bucket for weekly expiring assets
+GCS_BUCKET_WEEKLY_EXPIRING=dev-pistachio-assets-weekly-expiring
+```
+
+**Note:** The project uses hardcoded Firebase configuration in `src/utils/ServerStorageUtils.ts`. For production, you may want to move this to environment variables.
+
+### 5. Configure Google Cloud Storage (Optional)
+
+If you plan to use Google Cloud Storage features (image uploads), you'll need to set up authentication:
+
+1. **Create a service account** in Google Cloud Console
+2. **Download the service account key** as a JSON file
+3. **Set the environment variable**:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
+```
+
+Alternatively, if running on Google Cloud Platform, authentication is handled automatically.
+
+### 6. Build the Project
+
+Compile TypeScript to JavaScript:
+
+```bash
+yarn build
+```
+
+This will generate the `dist/` directory with compiled JavaScript files.
+
+### 7. Verify Installation
+
+Run the tests to verify everything is set up correctly:
+
+```bash
+yarn test:run
+```
+
+## Running the Server
 
 ### Development Mode
 
 Run the server in development mode with hot reload:
+
 ```bash
-npm run dev
+yarn dev
 ```
 
-The server will start on port 3000 by default (or the port specified by the `PORT` environment variable).
+The server will start on port 3001 by default (or the port specified by the `PORT` environment variable).
 
 ### Production Mode
 
 Build and run the compiled server:
+
 ```bash
-npm run build
+yarn build
 node dist/index.js
 ```
 
-### Direct Execution
+### Direct Execution (Development)
 
 Run TypeScript directly without building:
+
 ```bash
-npm start
+yarn start
 ```
 
-### Environment Variables
+## Server Configuration
 
-- `PORT`: Port number for the HTTP server (default: 3000)
+### Default Settings
 
-Example:
-```bash
-PORT=8080 npm start
-```
+- **Port**: 3001 (configurable via `PORT` environment variable)
+- **Workers**: 2 (configurable via `NUM_WORKERS` environment variable)
+- **Host**: `0.0.0.0` (accessible from remote clients)
 
-### Remote Access
+### MCP Endpoint
 
 The server exposes an MCP endpoint at `/message` that accepts:
 - **GET**: Establish SSE stream for receiving messages
 - **POST**: Send MCP requests
 - **OPTIONS**: CORS preflight requests
 
-The server listens on `0.0.0.0` by default, making it accessible from remote clients.
+Example endpoint: `http://localhost:3001/message`
 
-Example endpoint: `http://localhost:3000/message`
+## Available Tools
 
-## Project Structure
+The server provides the following MCP tools:
 
-```
-pistachio-mcp/
-├── src/
-│   ├── index.ts          # Main server entry point
-│   ├── tools/            # Tool implementations
-│   │   └── example.ts    # Example calculator tool
-│   └── prompts/          # Prompt templates
-│       └── example.ts    # Example greeting prompt
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-└── README.md             # This file
-```
+- `search_image` - Search for images
+- `search_icon` - Search for icons
+- `create_remote_project` - Create a remote project
+- `remote_kdoctor` - Run kdoctor diagnostics
+- `remote_clean_project` - Clean a remote project
+- `remote_test_android` - Run Android tests remotely
 
-## Adding New Tools
+## Available Prompts
 
-1. Create a new file in `src/tools/` (e.g., `src/tools/my-tool.ts`):
+The server provides the following MCP prompts:
 
-```typescript
-import { z } from "zod";
+- `create_pistachio_project` - Generate instructions for creating a Pistachio project
+- `start_sync` - Generate instructions for starting sync
 
-export const myTool = {
-  name: "my_tool_name",
-  description: "Description of what the tool does",
-  inputSchema: z.object({
-    // Define your input schema using Zod
-    param1: z.string().describe("Parameter description"),
-  }),
-  handler: async (args: { param1: string }) => {
-    // Implement your tool logic
-    return { result: "tool output" };
-  },
-};
+## Development
+
+### Running Tests
+
+```bash
+# Run tests in watch mode
+yarn test
+
+# Run tests once
+yarn test:run
 ```
 
-2. Import and register the tool in `src/index.ts`:
+### Linting
 
-```typescript
-import { myTool } from "./tools/my-tool.js";
+```bash
+# Check for linting errors
+yarn lint
 
-// Add to tools/list handler
-server.setRequestHandler("tools/list", async () => {
-  return {
-    tools: [
-      // ... existing tools
-      {
-        name: myTool.name,
-        description: myTool.description,
-        inputSchema: myTool.inputSchema,
-      },
-    ],
-  };
-});
-
-// Add to tools/call handler
-server.setRequestHandler("tools/call", async (request) => {
-  const { name, arguments: args } = request.params;
-  
-  // ... existing tool handlers
-  if (name === myTool.name) {
-    const result = await myTool.handler(args as any);
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(result, null, 2),
-        },
-      ],
-    };
-  }
-});
+# Fix linting errors automatically
+yarn lint:fix
 ```
 
-## Adding New Prompt Templates
+### TypeScript Compilation Errors
 
-1. Create a new file in `src/prompts/` (e.g., `src/prompts/my-prompt.ts`):
+If you encounter TypeScript errors:
 
-```typescript
-import { z } from "zod";
-
-export const myPrompt = {
-  name: "my_prompt_name",
-  description: "Description of the prompt template",
-  arguments: z.object({
-    // Define your prompt arguments using Zod
-    arg1: z.string().describe("Argument description"),
-  }),
-  handler: async (args: { arg1: string }) => {
-    // Generate and return prompt messages
-    return [
-      {
-        role: "user" as const,
-        content: {
-          type: "text" as const,
-          text: `Your prompt text with ${args.arg1}`,
-        },
-      },
-    ];
-  },
-};
+```bash
+# Clean and rebuild
+rm -rf dist
+yarn build
 ```
-
-2. Import and register the prompt in `src/index.ts`:
-
-```typescript
-import { myPrompt } from "./prompts/my-prompt.js";
-
-// Add to prompts/list handler
-server.setRequestHandler("prompts/list", async () => {
-  return {
-    prompts: [
-      // ... existing prompts
-      {
-        name: myPrompt.name,
-        description: myPrompt.description,
-        arguments: myPrompt.arguments,
-      },
-    ],
-  };
-});
-
-// Add to prompts/get handler
-server.setRequestHandler("prompts/get", async (request) => {
-  const { name, arguments: args } = request.params;
-  
-  // ... existing prompt handlers
-  if (name === myPrompt.name) {
-    const messages = await myPrompt.handler(args as any);
-    return { messages };
-  }
-});
-```
-
-## Example Tools
-
-### Calculator Tool
-
-The example calculator tool (`example_calculator`) performs basic arithmetic operations:
-- Operations: add, subtract, multiply, divide
-- Input: Two numbers and an operation
-- Output: Calculation result
-
-## Example Prompts
-
-### Greeting Prompt
-
-The example greeting prompt (`greeting`) generates personalized greetings:
-- Arguments: name (required), language (optional: en, es, fr, de)
-- Output: Localized greeting message
-
-## Remote MCP Server
-
-This server uses the **Streamable HTTP transport** protocol, which allows MCP clients to connect remotely over HTTP. The transport supports:
-
-- Server-Sent Events (SSE) for streaming responses
-- Standard HTTP POST requests for sending messages
-- Session management for stateful connections
-- CORS support for web-based clients
-
-### Connecting from MCP Clients
-
-To connect to this remote server from an MCP client, configure it with:
-- **URL**: `http://your-server:3000/message`
-- **Transport**: Streamable HTTP
-
-## Dependencies
-
-- `@modelcontextprotocol/sdk`: Official MCP SDK for Node.js
-- `zod`: Schema validation library (required peer dependency)
-- `typescript`: TypeScript compiler
-- `tsx`: TypeScript execution runtime
 
 ## License
 

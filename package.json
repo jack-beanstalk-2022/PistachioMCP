@@ -23,7 +23,6 @@
   "dependencies": {
     "@google-cloud/storage": "^7.17.3",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "dotenv": "^17.2.3",
     "firebase": "^12.8.0",
     "zod": "^4.3.5"
   },
@@ -38,5 +37,5 @@
     "typescript-eslint": "^8.53.1",
     "vitest": "^4.0.18"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@4.10.3"
 }

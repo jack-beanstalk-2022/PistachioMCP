@@ -1,5 +1,3 @@
-import { config } from "dotenv";
-import { resolve } from "path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
@@ -20,9 +18,6 @@ import { startSyncPrompt } from "./prompts/start-sync.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { updateProjectTimestamp } from "./utils/ServerStorageUtils.js";
 import * as http from "http";
-
-// Load .env.local file
-config({ path: resolve(process.cwd(), ".env.local") });
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const NUM_WORKERS = process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS, 10) : 2;
