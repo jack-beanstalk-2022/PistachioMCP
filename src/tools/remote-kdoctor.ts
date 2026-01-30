@@ -21,8 +21,8 @@ export const remoteKdoctorTool = {
         const { project_id } = args;
 
         try {
-            const documentsPath = join(homedir(), "Documents");
-            const projectPath = join(documentsPath, project_id);
+            const projectsPath = join(homedir(), "PistachioMCPProjects");
+            const projectPath = join(projectsPath, project_id);
 
             // Execute kdoctor command in the project directory
             const { stdout, stderr } = await execAsync("kdoctor", {

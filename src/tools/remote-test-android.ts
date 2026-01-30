@@ -8,7 +8,7 @@ import { Storage } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
 import { withDeviceLock } from "../utils/DeviceLockUtils.js";
 
-const AVD_NAME = "Pixel_7_API_31";
+const AVD_NAME = "Medium_Phone_API_36.1";
 
 const PORT = 5554;
 
@@ -48,8 +48,8 @@ export const remoteTestAndroidTool = {
         const { project_id, test_name, package_name } = args;
         const serial = `emulator-${PORT}`;
 
-        const documentsPath = join(homedir(), "Documents");
-        const projectPath = join(documentsPath, project_id);
+        const projectsPath = join(homedir(), "PistachioMCPProjects");
+        const projectPath = join(projectsPath, project_id);
 
         // Check if project directory exists
         if (!existsSync(projectPath)) {
@@ -247,7 +247,7 @@ export const remoteTestAndroidTool = {
 
             // Step 9: Run adb pull to get the screen recording
             const screenRecordPath = `/storage/emulated/0/Android/data/${package_name}/files/screenrecord_${test_name}.mp4`;
-            const localScreenRecordPath = join(documentsPath, `screenrecord_${project_id}_${test_name}.mp4`);
+            const localScreenRecordPath = join(projectsPath, `screenrecord_${project_id}_${test_name}.mp4`);
             let screenRecordGcsUrl: string | null = null;
             const imageSequence: string[] = [];
             try {
@@ -295,7 +295,7 @@ export const remoteTestAndroidTool = {
 
                 // Extract frames at 1fps and convert to base64
                 try {
-                    const framesDir = join(documentsPath, `frames_${randomUUID()}`);
+                    const framesDir = join(projectsPath, `frames_${randomUUID()}`);
                     mkdirSync(framesDir, { recursive: true });
 
                     // Extract frames using ffmpeg

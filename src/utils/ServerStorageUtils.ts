@@ -56,22 +56,22 @@ async function initializeFirebaseApp(): Promise<FirebaseApp> {
         return app;
     }
 
-    const isDevEnv = process.env.NODE_ENV !== "production";
-
     // Initialize the app
     app = initializeApp(firebaseConfig);
 
     // Initialize Auth
     auth = getAuth(app);
 
-    // Configure Auth emulator for dev environment
-    if (isDevEnv) {
-        const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST || "localhost:9099";
+    // Configure Auth emulator only if explicitly requested via environment variable
+    const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+    if (authEmulatorHost) {
         try {
+            console.log(`Connecting to Auth emulator at http://${authEmulatorHost}`);
             connectAuthEmulator(auth, `http://${authEmulatorHost}`, { disableWarnings: true });
         } catch (error) {
             // Emulator already connected, ignore
             if (error instanceof Error && !error.message.includes("already been initialized")) {
+                console.warn("Failed to connect to Auth emulator:", error);
                 throw error;
             }
         }
@@ -80,15 +80,17 @@ async function initializeFirebaseApp(): Promise<FirebaseApp> {
     // Initialize Firestore
     db = getFirestore(app);
 
-    // Configure Firestore emulator for dev environment
-    if (isDevEnv) {
-        const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST || "localhost:8080";
+    // Configure Firestore emulator only if explicitly requested via environment variable
+    const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+    if (firestoreEmulatorHost) {
         const [host, port] = firestoreEmulatorHost.split(":");
         try {
+            console.log(`Connecting to Firestore emulator at ${host}:${port}`);
             connectFirestoreEmulator(db, host, parseInt(port, 10));
         } catch (error) {
             // Emulator already connected, ignore
             if (error instanceof Error && !error.message.includes("already been initialized")) {
+                console.warn("Failed to connect to Firestore emulator:", error);
                 throw error;
             }
         }
@@ -123,7 +125,17 @@ async function ensureAuthenticated(): Promise<void> {
         await signInAnonymously(auth);
         authInitialized = true;
     } catch (error) {
-        throw new Error(`Failed to authenticate anonymously: ${error instanceof Error ? error.message : String(error)}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Firebase Auth Error: ${errorMessage}`);
+        if (errorMessage.includes("network-request-failed")) {
+            console.error("This error often occurs when the Firebase Auth server is unreachable. Check your internet connection or proxy/VPN/tunnel settings.");
+            if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+                console.error(`Currently trying to connect to EMULATOR at ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);
+            } else {
+                console.error("Currently trying to connect to PRODUCTION Firebase Auth.");
+            }
+        }
+        throw new Error(`Failed to authenticate anonymously: ${errorMessage}`);
     }
 }
 

@@ -25,14 +25,14 @@ export const createRemoteProjectTool = {
             // First, create an entry in Firebase mcpProjects collection
             const projectId = await createMCPProject(project_name);
 
-            const documentsPath = join(homedir(), "Documents");
+            const projectsPath = join(homedir(), "PistachioMCPProjects");
             const cloneUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
 
             // Execute git clone command
             const { stderr } = await execAsync(
                 `git clone ${cloneUrl} ${projectId}`,
                 {
-                    cwd: documentsPath,
+                    cwd: projectsPath,
                 }
             );
 

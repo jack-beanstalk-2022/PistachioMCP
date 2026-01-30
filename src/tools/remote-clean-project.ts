@@ -21,8 +21,8 @@ export const remoteCleanProjectTool = {
         const { project_id } = args;
 
         try {
-            const documentsPath = join(homedir(), "Documents");
-            const projectPath = join(documentsPath, project_id);
+            const projectsPath = join(homedir(), "PistachioMCPProjects");
+            const projectPath = join(projectsPath, project_id);
 
             // Execute ./gradlew clean command in the project directory
             const { stdout, stderr } = await execAsync("./gradlew --no-daemon clean", {
