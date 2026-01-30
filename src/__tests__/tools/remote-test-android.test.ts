@@ -133,7 +133,7 @@ describe("remoteTestAndroidTool", () => {
             } else if (command.includes("adb devices")) {
                 res = { stdout: "List of devices attached\n\n", stderr: "" };
             } else if (command.includes("emulator -list-avds")) {
-                res = { stdout: "Pixel_7_API_31\n", stderr: "" };
+                res = { stdout: "Medium_Phone_API_36.1\n", stderr: "" };
             } else if (command.includes("gradlew")) {
                 res = { stdout: "BUILD SUCCESSFUL", stderr: "" };
             } else if (command.includes("instrument")) {
@@ -198,6 +198,7 @@ describe("remoteTestAndroidTool", () => {
 
         it("should proceed to emulator start when no device is running", async () => {
             vi.useFakeTimers();
+            mockExecResponse("Medium_Phone_API_36.1\n", "", false, "emulator -list-avds");
             const handlerPromise = remoteTestAndroidTool.handler(testArgs);
             await vi.advanceTimersByTimeAsync(130000);
             const result = await handlerPromise;
@@ -225,11 +226,12 @@ describe("remoteTestAndroidTool", () => {
             mockExecResponse("Other_AVD\nAnother_AVD\n", "", false, "emulator -list-avds");
             const result = await remoteTestAndroidTool.handler(testArgs);
             expect(result.success).toBe(false);
-            expect(result.output).toContain("AVD \"Pixel_7_API_31\" not found");
+            expect(result.output).toContain("AVD \"Medium_Phone_API_36.1\" not found");
         });
 
         it("should return error when emulator fails to start", async () => {
             vi.useFakeTimers();
+            mockExecResponse("Medium_Phone_API_36.1\n", "", false, "emulator -list-avds");
             mockExecResponse("", "", true, "emulator -avd");
             const handlerPromise = remoteTestAndroidTool.handler(testArgs);
             await vi.advanceTimersByTimeAsync(130000);
@@ -248,7 +250,7 @@ describe("remoteTestAndroidTool", () => {
                     if (callCount < 3) res = { stdout: "List of devices attached\n\n", stderr: "" };
                     else res = { stdout: "List of devices attached\nemulator-5554\tdevice\n\n", stderr: "" };
                 } else if (command.includes("emulator -list-avds")) {
-                    res = { stdout: "Pixel_7_API_31\n", stderr: "" };
+                    res = { stdout: "Medium_Phone_API_36.1\n", stderr: "" };
                 }
                 if (callback) callback(null, res.stdout, res.stderr);
                 return {} as ReturnType<typeof import("child_process").exec>;

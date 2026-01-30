@@ -149,23 +149,20 @@ The server exposes an MCP endpoint at `/message` that accepts:
 
 Example endpoint: `http://localhost:3001/message`
 
-## Available Tools
+## Rclone
 
-The server provides the following MCP tools:
+server
 
-- `search_image` - Search for images
-- `search_icon` - Search for icons
-- `create_remote_project` - Create a remote project
-- `remote_kdoctor` - Run kdoctor diagnostics
-- `remote_clean_project` - Clean a remote project
-- `remote_test_android` - Run Android tests remotely
+```bash
+rclone serve webdav /dir-to-folder --addr:8080
+```
 
-## Available Prompts
+client
 
-The server provides the following MCP prompts:
-
-- `create_pistachio_project` - Generate instructions for creating a Pistachio project
-- `start_sync` - Generate instructions for starting sync
+```bash
+rclone config create pistachio-server webdav url=https://sync.pistachio.technology
+rclone bisync Vva56eeowHyW1kIAVn6O pistachio-server:Vva56eeowHyW1kIAVn6O  --resync
+```
 
 ## Development
 

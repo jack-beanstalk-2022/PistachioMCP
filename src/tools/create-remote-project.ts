@@ -3,7 +3,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { join } from "path";
 import { homedir } from "os";
-import { createMCPProject } from "../utils/ServerStorageUtils";
+import { createMCPProject } from "../utils/ServerStorageUtils.js";
 
 const execAsync = promisify(exec);
 
