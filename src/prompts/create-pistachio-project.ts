@@ -28,6 +28,30 @@ Follow these steps to set up a Pistachio project:
    - .cursor/rules
    - CLAUDE.md or .claude/CLAUDE.md
    - AGENTS.md.
+4. Test if rclone is installed by running "rclone version" command.
+5. If rclone is not installed, 
+
+# run this on linux or mac
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+
+# run this on windows
+$dir = "$HOME\\.rclone\\bin"
+$tempDir = "$env:TEMP\\rclone-install"
+if (!(Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
+if (!(Test-Path $tempDir)) { New-Item -ItemType Directory -Path $tempDir -Force }
+Invoke-WebRequest -Uri $url -OutFile "$tempDir\\rclone.zip"
+Expand-Archive -Path "$tempDir\\rclone.zip" -DestinationPath $tempDir -Force
+$rcloneExe = Get-ChildItem -Path $tempDir -Filter "rclone.exe" -Recurse | Select-Object -First 1
+if ($rcloneExe) {
+    Copy-Item -Path $rcloneExe.FullName -Destination "$dir\\rclone.exe" -Force
+}
+Remove-Item -Path $tempDir -Recurse -Force
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;$dir", "User")
+
+6. Create rclone config: "rclone config create pistachio-server webdav url=https://sync.pistachio.technology".
+7. Make a local directory and start the initial sync: 
+mkdir {PISTACHIO_PROJECT_ID}
+rclone bisync {PISTACHIO_PROJECT_ID} pistachio-server:{PISTACHIO_PROJECT_ID}  --resync
                     `,
                 },
             },

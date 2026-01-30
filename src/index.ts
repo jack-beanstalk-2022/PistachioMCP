@@ -14,7 +14,7 @@ import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
 import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
-import { startSyncPrompt } from "./prompts/start-sync.js";
+import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { updateProjectTimestamp } from "./utils/ServerStorageUtils.js";
 import * as http from "http";
@@ -360,9 +360,15 @@ async function main() {
                     ],
                 },
                 {
-                    name: startSyncPrompt.name,
-                    description: startSyncPrompt.description,
-                    arguments: [],
+                    name: testAndroidRemotePrompt.name,
+                    description: testAndroidRemotePrompt.description,
+                    arguments: [
+                        {
+                            name: "description",
+                            description: "Description of the test",
+                            type: "string",
+                        },
+                    ],
                 },
             ],
         };
@@ -386,11 +392,12 @@ async function main() {
             }
         }
 
-        if (name === startSyncPrompt.name) {
+        if (name === testAndroidRemotePrompt.name) {
             try {
-                const messages = startSyncPrompt.handler();
+                const typedArgs = testAndroidRemotePrompt.arguments.parse(args);
+                const messages = testAndroidRemotePrompt.handler(typedArgs);
                 return {
-                    description: startSyncPrompt.description,
+                    description: testAndroidRemotePrompt.description,
                     messages,
                 };
             } catch (error) {
