@@ -17,6 +17,7 @@ import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project
 import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { updateProjectTimestamp } from "./utils/ServerStorageUtils.js";
+import { logger } from "./utils/Logger.js";
 import * as http from "http";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
@@ -48,10 +49,28 @@ const toolCallQueue = new TaskQueue<ToolTask, { content: ContentBlock[]; isError
  * Handles the execution of a tool call
  */
 async function handleToolCall(name: string, args: unknown): Promise<{ content: ContentBlock[]; isError: boolean }> {
+    const startTime = Date.now();
     if (name === searchImageTool.name) {
         try {
             const parsedArgs = searchImageTool.inputSchema.parse(args);
             const result = await searchImageTool.handler(parsedArgs);
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
+            }
+
             return {
                 content: [
                     {
@@ -64,11 +83,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -80,6 +111,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         try {
             const parsedArgs = searchIconTool.inputSchema.parse(args);
             const result = await searchIconTool.handler(parsedArgs);
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
+            }
+
             return {
                 content: [
                     {
@@ -92,11 +140,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -108,6 +168,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         try {
             const parsedArgs = createRemoteProjectTool.inputSchema.parse(args);
             const result = await createRemoteProjectTool.handler(parsedArgs);
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
+            }
+
             return {
                 content: [
                     {
@@ -120,11 +197,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -143,8 +232,31 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                     await updateProjectTimestamp(parsedArgs.project_id);
                 } catch (error) {
                     // Log but don't fail the tool call if timestamp update fails
-                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                    logger.warn({
+                        tool_name: name,
+                        project_id: parsedArgs.project_id,
+                        error_message: error instanceof Error ? error.message : String(error),
+                    }, "Failed to update project timestamp");
                 }
+            }
+
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
             }
 
             return {
@@ -159,11 +271,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -182,8 +306,31 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                     await updateProjectTimestamp(parsedArgs.project_id);
                 } catch (error) {
                     // Log but don't fail the tool call if timestamp update fails
-                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                    logger.warn({
+                        tool_name: name,
+                        project_id: parsedArgs.project_id,
+                        error_message: error instanceof Error ? error.message : String(error),
+                    }, "Failed to update project timestamp");
                 }
+            }
+
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
             }
 
             return {
@@ -198,11 +345,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -221,8 +380,31 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                     await updateProjectTimestamp(parsedArgs.project_id);
                 } catch (error) {
                     // Log but don't fail the tool call if timestamp update fails
-                    console.warn(`Failed to update project timestamp for ${parsedArgs.project_id}:`, error);
+                    logger.warn({
+                        tool_name: name,
+                        project_id: parsedArgs.project_id,
+                        error_message: error instanceof Error ? error.message : String(error),
+                    }, "Failed to update project timestamp");
                 }
+            }
+
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
             }
 
             const content: ContentBlock[] = [];
@@ -261,11 +443,23 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
                 isError: !result.success,
             };
         } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                        text: `Error: ${errorMessage}`,
                     },
                 ],
                 isError: true,
@@ -273,7 +467,22 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         }
     }
 
-    throw new Error(`Unknown tool: ${name}`);
+    const durationMs = Date.now() - startTime;
+    logger.error({
+        tool_name: name,
+        duration_ms: durationMs,
+        status: "unknown_tool",
+    }, "Unknown tool requested");
+
+    return {
+        content: [
+            {
+                type: "text",
+                text: `Error: Unknown tool: ${name}`,
+            },
+        ],
+        isError: true,
+    };
 }
 
 
@@ -336,12 +545,28 @@ async function main() {
         // Extract project ID from args if present
         const projectId = extractProjectId(args);
 
-        // Queue the tool call and wait for it to be processed
-        return toolCallQueue.enqueue(
-            { name, args },
-            async (task) => handleToolCall(task.name, task.args),
-            projectId
-        );
+        try {
+            // Queue the tool call and wait for it to be processed
+            const result = await toolCallQueue.enqueue(
+                { name, args },
+                async (task) => handleToolCall(task.name, task.args),
+                projectId
+            );
+            return result;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                project_id: projectId,
+                status: "unexpected_error",
+                error_message: errorMessage,
+                stack: errorStack,
+            }, "Unexpected error in tool call");
+
+            throw error;
+        }
     });
 
     // Register prompts
@@ -376,18 +601,39 @@ async function main() {
 
     server.setRequestHandler(GetPromptRequestSchema, (request) => {
         const { name, arguments: args } = request.params;
+        const startTime = Date.now();
 
         if (name === createPistachioProjectPrompt.name) {
             try {
                 const typedArgs = createPistachioProjectPrompt.arguments.parse(args);
                 const messages = createPistachioProjectPrompt.handler(typedArgs);
+                const durationMs = Date.now() - startTime;
+
+                logger.info({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Prompt request completed successfully");
+
                 return {
                     description: createPistachioProjectPrompt.description,
                     messages,
                 };
             } catch (error) {
+                const durationMs = Date.now() - startTime;
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorStack = error instanceof Error ? error.stack : undefined;
+
+                logger.error({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "error",
+                    error_message: errorMessage,
+                    stack: errorStack,
+                }, "Prompt request failed");
+
                 throw new Error(
-                    `Error generating prompt: ${error instanceof Error ? error.message : String(error)}`
+                    `Error generating prompt: ${errorMessage}`
                 );
             }
         }
@@ -396,16 +642,43 @@ async function main() {
             try {
                 const typedArgs = testAndroidRemotePrompt.arguments.parse(args);
                 const messages = testAndroidRemotePrompt.handler(typedArgs);
+                const durationMs = Date.now() - startTime;
+
+                logger.info({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Prompt request completed successfully");
+
                 return {
                     description: testAndroidRemotePrompt.description,
                     messages,
                 };
             } catch (error) {
+                const durationMs = Date.now() - startTime;
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorStack = error instanceof Error ? error.stack : undefined;
+
+                logger.error({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "error",
+                    error_message: errorMessage,
+                    stack: errorStack,
+                }, "Prompt request failed");
+
                 throw new Error(
-                    `Error generating prompt: ${error instanceof Error ? error.message : String(error)}`
+                    `Error generating prompt: ${errorMessage}`
                 );
             }
         }
+
+        const durationMs = Date.now() - startTime;
+        logger.error({
+            prompt_name: name,
+            duration_ms: durationMs,
+            status: "unknown_prompt",
+        }, "Unknown prompt requested");
 
         throw new Error(`Unknown prompt: ${name}`);
     });
@@ -442,11 +715,18 @@ async function main() {
     });
 
     httpServer.listen(PORT, "0.0.0.0", () => {
-        console.log(`MCP server listening on port ${PORT}`);
+        logger.info({ port: PORT }, "MCP server listening");
     });
 }
 
 main().catch((error) => {
-    console.error("Fatal error in main():", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    logger.error({
+        error_message: errorMessage,
+        stack: errorStack,
+    }, "Fatal error in main()");
+
     process.exit(1);
 });

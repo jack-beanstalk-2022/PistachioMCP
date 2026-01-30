@@ -72,10 +72,12 @@ const mocks = vi.hoisted(() => {
     const mockStorageInstance = {
         bucket: vi.fn().mockReturnValue(mockBucket),
     };
+    const mockLoggerWarn = vi.fn();
     return {
         mockFile,
         mockBucket,
         mockStorageInstance,
+        mockLoggerWarn,
     };
 });
 
@@ -92,11 +94,22 @@ vi.mock("crypto", () => ({
     randomUUID: vi.fn(() => "test-uuid-123"),
 }));
 
+// Mock logger
+vi.mock("../../utils/Logger.js", () => ({
+    logger: {
+        warn: mocks.mockLoggerWarn,
+        error: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
+    },
+}));
+
 describe("remoteTestAndroidTool", () => {
     const mockExec = vi.mocked(exec);
     const mockExistsSync = vi.mocked(fs.existsSync);
     const mockReadFileSync = vi.mocked(fs.readFileSync);
     const mockReaddirSync = vi.mocked(fs.readdirSync);
+    const mockLoggerWarn = mocks.mockLoggerWarn;
 
     interface CommandResponse {
         stdout: string;
@@ -116,6 +129,7 @@ describe("remoteTestAndroidTool", () => {
         mockExistsSync.mockReturnValue(true);
         mockReaddirSync.mockReturnValue([]);
         mockReadFileSync.mockReturnValue(Buffer.from("data"));
+        mockLoggerWarn.mockClear();
 
         vi.spyOn(console, "error").mockImplementation(() => { });
         vi.spyOn(console, "warn").mockImplementation(() => { });
@@ -319,7 +333,15 @@ describe("remoteTestAndroidTool", () => {
             mockExecResponse("", "Pull failed", true, "pull");
             const result = await remoteTestAndroidTool.handler(testArgs);
             expect(result.success).toBe(true);
-            expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("Could not pull screen recording"));
+            expect(mockLoggerWarn).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    project_id: "test-project",
+                    serial: "emulator-5554",
+                    screen_record_path: expect.stringContaining("screenrecord_ScrollingInstrumentedTest.mp4") as unknown as string,
+                    error_message: expect.any(String) as unknown as string,
+                }),
+                expect.stringContaining("Could not pull screen recording")
+            );
         });
 
         it("should upload video to GCS and extract frames", async () => {

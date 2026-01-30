@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../utils/Logger.js";
 
 /**
  * Result type for icon search operations
@@ -95,10 +96,14 @@ async function searchIcons(
 
         return validIcons;
     } catch (error) {
-        console.error("Icon search error:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        logger.error({
+            error_message: errorMessage,
+            stack: errorStack,
+        }, "Icon search error");
         return {
-            error:
-                error instanceof Error ? error.message : String(error),
+            error: errorMessage,
         };
     }
 }

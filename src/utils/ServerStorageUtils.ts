@@ -3,6 +3,7 @@ import { getFirestore, connectFirestoreEmulator, Firestore, Timestamp, collectio
 import { getAuth, connectAuthEmulator, signInAnonymously, Auth } from "firebase/auth";
 import { Storage } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
+import { logger } from "./Logger.js";
 
 // Firebase configuration interface
 interface FirebaseConfig {
@@ -126,15 +127,21 @@ async function ensureAuthenticated(): Promise<void> {
         authInitialized = true;
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`Firebase Auth Error: ${errorMessage}`);
-        if (errorMessage.includes("network-request-failed")) {
-            console.error("This error often occurs when the Firebase Auth server is unreachable. Check your internet connection or proxy/VPN/tunnel settings.");
-            if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-                console.error(`Currently trying to connect to EMULATOR at ${process.env.FIREBASE_AUTH_EMULATOR_HOST}`);
-            } else {
-                console.error("Currently trying to connect to PRODUCTION Firebase Auth.");
-            }
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        if (authEmulatorHost) {
+            // Using emulator - use console for local development
+            console.error(`Firebase Auth Error: ${errorMessage}`);
+        } else {
+            // Production - use structured logging
+            logger.error({
+                error_message: errorMessage,
+                stack: errorStack,
+                auth_mode: "production",
+            }, "Firebase Auth Error");
         }
+
         throw new Error(`Failed to authenticate anonymously: ${errorMessage}`);
     }
 }
@@ -274,7 +281,11 @@ export async function uploadToGCSWeeklyExpiring(
         const publicUrl = `https://storage.googleapis.com/${finalBucketName}/${userId}/${filename}`;
         return publicUrl;
     } catch (error) {
-        console.warn("Failed to upload to GCS:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.warn({
+            error_message: errorMessage,
+            user_id: userId,
+        }, "Failed to upload to GCS");
         return null;
     }
 }

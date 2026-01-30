@@ -7,6 +7,7 @@ import { existsSync, readFileSync, unlinkSync, mkdirSync, readdirSync, rmSync } 
 import { Storage } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
 import { withDeviceLock } from "../utils/DeviceLockUtils.js";
+import { logger } from "../utils/Logger.js";
 
 const AVD_NAME = "Medium_Phone_API_36.1";
 
@@ -254,7 +255,13 @@ export const remoteTestAndroidTool = {
                 await execAsync(`adb -s ${serial} pull "${screenRecordPath}" "${localScreenRecordPath}"`);
             } catch (error) {
                 // Screen recording might not exist, so we don't fail the whole test
-                console.warn(`Warning: Could not pull screen recording: ${error instanceof Error ? error.message : String(error)}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.warn({
+                    project_id,
+                    serial,
+                    screen_record_path: screenRecordPath,
+                    error_message: errorMessage,
+                }, "Could not pull screen recording");
             }
             // Upload video to GCS if file was successfully pulled
             if (existsSync(localScreenRecordPath)) {
@@ -290,7 +297,11 @@ export const remoteTestAndroidTool = {
                     screenRecordGcsUrl = `https://storage.googleapis.com/${finalBucketName}/${project_id}/${filename}`;
                 } catch (error) {
                     // Log but don't fail if upload fails
-                    console.warn(`Warning: Could not upload screen recording to GCS: ${error instanceof Error ? error.message : String(error)}`);
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    logger.warn({
+                        project_id,
+                        error_message: errorMessage,
+                    }, "Could not upload screen recording to GCS");
                 }
 
                 // Extract frames at 1fps and convert to base64
@@ -319,11 +330,20 @@ export const remoteTestAndroidTool = {
                     try {
                         rmSync(framesDir, { recursive: true, force: true });
                     } catch (error) {
-                        console.warn(`Warning: Could not delete frames directory: ${error instanceof Error ? error.message : String(error)}`);
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        logger.warn({
+                            project_id,
+                            frames_dir: framesDir,
+                            error_message: errorMessage,
+                        }, "Could not delete frames directory");
                     }
                 } catch (error) {
                     // Log but don't fail if frame extraction fails
-                    console.warn(`Warning: Could not extract frames from video: ${error instanceof Error ? error.message : String(error)}`);
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    logger.warn({
+                        project_id,
+                        error_message: errorMessage,
+                    }, "Could not extract frames from video");
                 }
 
                 // Delete the local file after successful upload
@@ -331,7 +351,12 @@ export const remoteTestAndroidTool = {
                     unlinkSync(localScreenRecordPath);
                 } catch (error) {
                     // Log but don't fail if deletion fails
-                    console.warn(`Failed to delete screen recording file: ${error instanceof Error ? error.message : String(error)}`);
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    logger.warn({
+                        project_id,
+                        local_screen_record_path: localScreenRecordPath,
+                        error_message: errorMessage,
+                    }, "Failed to delete screen recording file");
                 }
             }
 
@@ -351,7 +376,13 @@ export const remoteTestAndroidTool = {
                 await execAsync(`adb -s ${serial} uninstall ${package_name}.test`);
             } catch (error) {
                 // Log but don't fail if uninstall fails
-                console.warn(`Warning: Could not uninstall test APK: ${error instanceof Error ? error.message : String(error)}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.warn({
+                    project_id,
+                    serial,
+                    package_name: `${package_name}.test`,
+                    error_message: errorMessage,
+                }, "Could not uninstall test APK");
             }
 
             try {
@@ -359,7 +390,13 @@ export const remoteTestAndroidTool = {
                 await execAsync(`adb -s ${serial} uninstall ${package_name}`);
             } catch (error) {
                 // Log but don't fail if uninstall fails
-                console.warn(`Warning: Could not uninstall main app: ${error instanceof Error ? error.message : String(error)}`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.warn({
+                    project_id,
+                    serial,
+                    package_name,
+                    error_message: errorMessage,
+                }, "Could not uninstall main app");
             }
 
             // Return structured result with extracted data
