@@ -61,6 +61,10 @@ NUM_WORKERS=2
 # Optional: Set Node environment
 NODE_ENV=development
 
+# Optional: Set log level (default: info)
+# Options: trace, debug, info, warn, error, fatal
+LOG_LEVEL=info
+
 # Optional: Firebase emulator configuration (for development)
 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
 FIRESTORE_EMULATOR_HOST=localhost:8080
@@ -117,7 +121,61 @@ The server will start on port 3001 by default (or the port specified by the `POR
 
 ### Production Mode
 
-Build and run the compiled server:
+#### Using PM2
+
+PM2 is a process manager that provides automatic restarts, log rotation, and process monitoring. To use PM2:
+
+1. **Install PM2 log rotation module** (first time only):
+   ```bash
+   pm2 install pm2-logrotate
+   pm2 set pm2-logrotate:max_size 10M
+   pm2 set pm2-logrotate:retain 30
+   pm2 set pm2-logrotate:compress true
+   pm2 set pm2-logrotate:rotateInterval "0 0 * * *"
+   ```
+
+   **Note:** PM2 uses the `pm2-logrotate` module for automatic log rotation. The configuration above sets:
+   - `max_size`: Maximum log file size before rotation (10M)
+   - `retain`: Number of rotated log files to keep (30 days)
+   - `compress`: Compress old log files to save space
+   - `rotateInterval`: Time-based rotation schedule using cron format `"0 0 * * *"` (daily at midnight)
+
+2. **Build and start the server**:
+   ```bash
+   yarn build
+   yarn pm2:start
+   ```
+
+3. **Monitor the server**:
+   ```bash
+   # View logs
+   yarn pm2:logs
+   
+   # Check status
+   yarn pm2:status
+   ```
+
+4. **Manage the server**:
+   ```bash
+   # Restart
+   yarn pm2:restart
+   
+   # Stop
+   yarn pm2:stop
+   
+   # Remove from PM2
+   yarn pm2:delete
+   ```
+
+**Log Files:**
+- Combined logs: `logs/combined.log` (all stdout and stderr)
+- Error logs: `logs/error.log` (error-level logs only)
+- Logs are rotated daily at midnight and retained for 30 days
+- Old logs are automatically compressed
+
+#### Direct Node Execution
+
+Build and run the compiled server directly:
 
 ```bash
 yarn build
