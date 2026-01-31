@@ -23,7 +23,13 @@
     "rclone:restart": "pm2 restart rclone-webdav",
     "rclone:logs": "pm2 logs rclone-webdav",
     "rclone:status": "pm2 describe rclone-webdav",
-    "rclone:delete": "pm2 delete rclone-webdav"
+    "rclone:delete": "pm2 delete rclone-webdav",
+    "proxy:start": "pm2 start ecosystem.config.cjs --only webdav-proxy",
+    "proxy:stop": "pm2 stop webdav-proxy",
+    "proxy:restart": "pm2 restart webdav-proxy",
+    "proxy:logs": "pm2 logs webdav-proxy",
+    "proxy:status": "pm2 describe webdav-proxy",
+    "proxy:delete": "pm2 delete webdav-proxy"
   },
   "keywords": [
     "mcp",

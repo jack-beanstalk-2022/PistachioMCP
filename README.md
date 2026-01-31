@@ -207,19 +207,39 @@ The server exposes an MCP endpoint at `/message` that accepts:
 
 Example endpoint: `http://localhost:3001/message`
 
-## Rclone
 
-server
+## Managing the Proxy
+
+Build the project first to ensure the proxy is compiled:
 
 ```bash
-rclone serve webdav /dir-to-folder --addr:8080
+yarn build
 ```
 
-client
+Then manage the processes via PM2:
 
 ```bash
-rclone config create pistachio-server webdav url=https://sync.pistachio.technology
-rclone bisync Vva56eeowHyW1kIAVn6O pistachio-server:Vva56eeowHyW1kIAVn6O  --resync
+# Start all services (MCP, rclone, and Proxy)
+yarn mcp:start
+
+# Manage only the proxy
+yarn proxy:start
+yarn proxy:logs
+yarn proxy:status
+yarn proxy:restart
+yarn proxy:stop
+```
+
+## Rclone
+
+### Client Configuration
+
+When configuring your local rclone client, point it to the proxy port (8080) instead of the raw rclone port:
+
+```bash
+# Example client setup
+rclone config create pistachio-server webdav url=http://<your-server-ip>:8080
+rclone bisync ./local-folder pistachio-server:<project_id> --resync
 ```
 
 ## Development
