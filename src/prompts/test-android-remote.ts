@@ -36,7 +36,7 @@ Follow these steps to test an Android app remotely:
 
 3. Sync project with rclone:
    - Run the following command to sync the local project with the remote server:
-     rclone sync {PISTACHIO_PROJECT_ID} pistachio-server:{PISTACHIO_PROJECT_ID} --transfers 32 --checkers 64 --size-only --fast-list -P
+     rclone sync {PISTACHIO_PROJECT_ID} pistachio-server:{PISTACHIO_PROJECT_ID} --exclude-from={PISTACHIO_PROJECT_ID}/.rcloneignore  --transfers 32 --checkers 64 --size-only --fast-list -P
    - Wait for the sync to complete before proceeding.
 
 4. Run the test using remote-test-android tool:
