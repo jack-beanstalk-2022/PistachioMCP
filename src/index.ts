@@ -14,7 +14,7 @@ import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
 import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { remoteTestIosTool } from "./tools/remote-test-ios.js";
-import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
+import { createRemoteProjectPrompt } from "./prompts/create-remote-project.js";
 import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
 import { testIosRemotePrompt } from "./prompts/test-ios-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
@@ -679,8 +679,8 @@ async function main() {
         return {
             prompts: [
                 {
-                    name: createPistachioProjectPrompt.name,
-                    description: createPistachioProjectPrompt.description,
+                    name: createRemoteProjectPrompt.name,
+                    description: createRemoteProjectPrompt.description,
                     arguments: [
                         {
                             name: "project_name",
@@ -719,10 +719,10 @@ async function main() {
         const { name, arguments: args } = request.params;
         const startTime = Date.now();
 
-        if (name === createPistachioProjectPrompt.name) {
+        if (name === createRemoteProjectPrompt.name) {
             try {
-                const typedArgs = createPistachioProjectPrompt.arguments.parse(args);
-                const messages = createPistachioProjectPrompt.handler(typedArgs);
+                const typedArgs = createRemoteProjectPrompt.arguments.parse(args);
+                const messages = createRemoteProjectPrompt.handler(typedArgs);
                 const durationMs = Date.now() - startTime;
 
                 logger.info({
@@ -732,7 +732,7 @@ async function main() {
                 }, "Prompt request completed successfully");
 
                 return {
-                    description: createPistachioProjectPrompt.description,
+                    description: createRemoteProjectPrompt.description,
                     messages,
                 };
             } catch (error) {

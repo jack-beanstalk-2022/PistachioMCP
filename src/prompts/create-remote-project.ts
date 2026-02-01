@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 /**
- * Prompt template for creating a pistachio project
+ * Prompt template for creating a remote project
  */
-export const createPistachioProjectPrompt = {
-    name: "create_pistachio_project",
-    description: "Creates a new pistachio project",
+export const createRemoteProjectPrompt = {
+    name: "create_remote_project",
+    description: "Creates a new remote project",
     arguments: z.object({
         project_name: z.string().describe("The name of the project to create"),
     }),
@@ -18,18 +18,8 @@ export const createPistachioProjectPrompt = {
                     type: "text" as const,
                     text: `
 Follow these steps to set up a Pistachio project:
-1. Search for PISTACHIO_PROJECT_ID in the following files:
-   - .cursor/rules
-   - CLAUDE.md or .claude/CLAUDE.md
-   - AGENTS.md.
-   If the file already contains a PISTACHIO_PROJECT_ID, use the value and return. Otherwise, continue to the next step.
-2. Call create-remote-project tool with the project name ${project_name}. Extract the project ID from the tool response. 
-3. Save the project ID in the format PISTACHIO_PROJECT_ID = <project_id> in one of the following files:
-   - .cursor/rules
-   - CLAUDE.md or .claude/CLAUDE.md
-   - AGENTS.md.
-4. Test if rclone is installed by running "rclone version" command.
-5. If rclone is not installed, 
+1. Test if rclone is installed by running "rclone version" command.
+2. If rclone is not installed, 
 
 # run this on linux or mac
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
@@ -48,8 +38,18 @@ if ($rcloneExe) {
 Remove-Item -Path $tempDir -Recurse -Force
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;$dir", "User")
 
-6. Create rclone config: "rclone config create pistachio-server webdav url=https://sync.pistachio.technology".
-7. Make a local directory and start the initial sync: 
+3. Create rclone config: "rclone config create pistachio-server webdav url=https://sync.pistachio.technology".
+4. Search for PISTACHIO_PROJECT_ID in the following files:
+   - .cursor/rules
+   - CLAUDE.md or .claude/CLAUDE.md
+   - AGENTS.md.
+   If the file already contains a PISTACHIO_PROJECT_ID, use the value and return. Otherwise, continue to the next step.
+5. Call create-remote-project tool with the project name ${project_name}. Extract the project ID from the tool response. 
+6. Save the project ID in the format PISTACHIO_PROJECT_ID = <project_id> in one of the following files:
+   - .cursor/rules
+   - CLAUDE.md or .claude/CLAUDE.md
+   - AGENTS.md.
+7. If the local directory does not exist, make a local directory and start the initial sync: 
 mkdir {PISTACHIO_PROJECT_ID}
 rclone bisync {PISTACHIO_PROJECT_ID} pistachio-server:{PISTACHIO_PROJECT_ID}  --resync
                     `,
