@@ -311,7 +311,7 @@ export const remoteTestAndroidTool = {
 
                     // Extract frames using ffmpeg
                     await execAsync(
-                        `ffmpeg -i "${localScreenRecordPath}" -vf fps=1 -q:v 4 "${join(framesDir, "frame_%04d.jpg")}"`
+                        `ffmpeg -i "${localScreenRecordPath}" -vf "fps=1,scale=320:-1" -q:v 6 "${join(framesDir, "frame_%04d.jpg")}"`
                     );
 
                     // Read all frame files and convert to base64

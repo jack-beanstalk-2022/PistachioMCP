@@ -13,8 +13,10 @@ import { createRemoteProjectTool } from "./tools/create-remote-project.js";
 import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
 import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
+import { remoteTestIosTool } from "./tools/remote-test-ios.js";
 import { createPistachioProjectPrompt } from "./prompts/create-pistachio-project.js";
 import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
+import { testIosRemotePrompt } from "./prompts/test-ios-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { updateProjectTimestamp } from "./utils/ServerStorageUtils.js";
 import { logger } from "./utils/Logger.js";
@@ -467,6 +469,104 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
         }
     }
 
+    if (name === remoteTestIosTool.name) {
+        try {
+            const parsedArgs = remoteTestIosTool.inputSchema.parse(args);
+            const result = await remoteTestIosTool.handler(parsedArgs);
+
+            // Update project timestamp if successful
+            if (result.success && parsedArgs.project_id) {
+                try {
+                    await updateProjectTimestamp(parsedArgs.project_id);
+                } catch (error) {
+                    // Log but don't fail the tool call if timestamp update fails
+                    logger.warn({
+                        tool_name: name,
+                        project_id: parsedArgs.project_id,
+                        error_message: error instanceof Error ? error.message : String(error),
+                    }, "Failed to update project timestamp");
+                }
+            }
+
+            const durationMs = Date.now() - startTime;
+
+            if (result.success) {
+                logger.info({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Tool call completed successfully");
+            } else {
+                logger.warn({
+                    tool_name: name,
+                    project_id: parsedArgs.project_id,
+                    duration_ms: durationMs,
+                    status: "execution_error",
+                    reason: result.output,
+                }, "Tool call failed");
+            }
+
+            const content: ContentBlock[] = [];
+
+            // Add the main output text
+            if (result.output) {
+                content.push({
+                    type: "text",
+                    text: result.output,
+                });
+            }
+
+            // Add screen recording as resource_link if available
+            if (result.screenrecord) {
+                content.push({
+                    type: "resource_link",
+                    uri: result.screenrecord,
+                    name: "screen recording of the test",
+                    mimeType: "video/mp4",
+                });
+            }
+
+            // Add image sequence as image blocks if available
+            if (result.images && result.images.length > 0) {
+                for (const imageBase64 of result.images) {
+                    content.push({
+                        type: "image",
+                        data: imageBase64,
+                        mimeType: "image/jpeg",
+                    });
+                }
+            }
+
+            return {
+                content,
+                isError: !result.success,
+            };
+        } catch (error) {
+            const durationMs = Date.now() - startTime;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logger.error({
+                tool_name: name,
+                duration_ms: durationMs,
+                status: "validation_error",
+                reason: errorMessage,
+                stack: errorStack,
+            }, "Tool call validation failed");
+
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: `Error: ${errorMessage}`,
+                    },
+                ],
+                isError: true,
+            };
+        }
+    }
+
     const durationMs = Date.now() - startTime;
     logger.error({
         tool_name: name,
@@ -535,6 +635,11 @@ async function main() {
                     description: remoteTestAndroidTool.description,
                     inputSchema: remoteTestAndroidTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
+                {
+                    name: remoteTestIosTool.name,
+                    description: remoteTestIosTool.description,
+                    inputSchema: remoteTestIosTool.inputSchema, // SDK will convert Zod to JSON Schema
+                },
             ],
         };
     });
@@ -587,6 +692,17 @@ async function main() {
                 {
                     name: testAndroidRemotePrompt.name,
                     description: testAndroidRemotePrompt.description,
+                    arguments: [
+                        {
+                            name: "description",
+                            description: "Description of the test",
+                            type: "string",
+                        },
+                    ],
+                },
+                {
+                    name: testIosRemotePrompt.name,
+                    description: testIosRemotePrompt.description,
                     arguments: [
                         {
                             name: "description",
@@ -652,6 +768,41 @@ async function main() {
 
                 return {
                     description: testAndroidRemotePrompt.description,
+                    messages,
+                };
+            } catch (error) {
+                const durationMs = Date.now() - startTime;
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorStack = error instanceof Error ? error.stack : undefined;
+
+                logger.error({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "error",
+                    error_message: errorMessage,
+                    stack: errorStack,
+                }, "Prompt request failed");
+
+                throw new Error(
+                    `Error generating prompt: ${errorMessage}`
+                );
+            }
+        }
+
+        if (name === testIosRemotePrompt.name) {
+            try {
+                const typedArgs = testIosRemotePrompt.arguments.parse(args);
+                const messages = testIosRemotePrompt.handler(typedArgs);
+                const durationMs = Date.now() - startTime;
+
+                logger.info({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Prompt request completed successfully");
+
+                return {
+                    description: testIosRemotePrompt.description,
                     messages,
                 };
             } catch (error) {
