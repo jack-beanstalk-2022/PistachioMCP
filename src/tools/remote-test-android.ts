@@ -33,7 +33,7 @@ function isExecError(error: unknown): error is ExecError {
 // TODO: this needs to run in a container so that user cannot inject malicious code into gradle scripts or APK
 export const remoteTestAndroidTool = {
     name: "remote_test_android",
-    description: "Run an test in composeApp/src/androidInstrumentedTest/kotlin/com/jetbrains/kmpapp/",
+    description: "Run an test in composeApp/src/androidInstrumentedTest/kotlin/com/jetbrains/kmpapp/AndroidInstrumentedTest.kt",
     inputSchema: z.object({
         project_id: z
             .string()
@@ -43,7 +43,7 @@ export const remoteTestAndroidTool = {
             .describe("The package name of the Android app (e.g., 'com.jetbrains.kmpapp')"),
         test_name: z
             .string()
-            .describe("The name of the test (e.g., 'ScrollingInstrumentedTest')"),
+            .describe("The test name inside AndroidInstrumentedTest.kt (e.g., 'testScrollingDownGesture')"),
     }),
     handler: async (args: { project_id: string; test_name: string; package_name: string }) => {
         const { project_id, test_name, package_name } = args;
@@ -223,7 +223,7 @@ export const remoteTestAndroidTool = {
             let output = "";
             try {
                 const { stdout, stderr } = await execAsync(
-                    `adb -s ${serial} shell am instrument -w -r -e class "${package_name}.${test_name}" ${package_name}.test/androidx.test.runner.AndroidJUnitRunner`
+                    `adb -s ${serial} shell am instrument -w -r -e class "${package_name}.AndroidInstrumentedTest#${test_name}" ${package_name}.test/androidx.test.runner.AndroidJUnitRunner`
                 );
 
                 // Combine stdout and stderr for complete output
