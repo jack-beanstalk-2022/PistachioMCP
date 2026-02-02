@@ -10,7 +10,6 @@ import {
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { createRemoteProjectTool } from "./tools/create-remote-project.js";
-import { remoteKdoctorTool } from "./tools/remote-kdoctor.js";
 import { remoteCleanProjectTool } from "./tools/remote-clean-project.js";
 import { remoteTestAndroidTool } from "./tools/remote-test-android.js";
 import { remoteTestIosTool } from "./tools/remote-test-ios.js";
@@ -182,80 +181,6 @@ async function handleToolCall(name: string, args: unknown): Promise<{ content: C
             } else {
                 logger.warn({
                     tool_name: name,
-                    duration_ms: durationMs,
-                    status: "execution_error",
-                    reason: result.output,
-                }, "Tool call failed");
-            }
-
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: result.success
-                            ? result.output
-                            : `Error: ${result.output}`,
-                    },
-                ],
-                isError: !result.success,
-            };
-        } catch (error) {
-            const durationMs = Date.now() - startTime;
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            const errorStack = error instanceof Error ? error.stack : undefined;
-
-            logger.error({
-                tool_name: name,
-                duration_ms: durationMs,
-                status: "validation_error",
-                reason: errorMessage,
-                stack: errorStack,
-            }, "Tool call validation failed");
-
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: `Error: ${errorMessage}`,
-                    },
-                ],
-                isError: true,
-            };
-        }
-    }
-
-    if (name === remoteKdoctorTool.name) {
-        try {
-            const parsedArgs = remoteKdoctorTool.inputSchema.parse(args);
-            const result = await remoteKdoctorTool.handler(parsedArgs);
-
-            // Update project timestamp if successful
-            if (result.success && parsedArgs.project_id) {
-                try {
-                    await updateProjectTimestamp(parsedArgs.project_id);
-                } catch (error) {
-                    // Log but don't fail the tool call if timestamp update fails
-                    logger.warn({
-                        tool_name: name,
-                        project_id: parsedArgs.project_id,
-                        error_message: error instanceof Error ? error.message : String(error),
-                    }, "Failed to update project timestamp");
-                }
-            }
-
-            const durationMs = Date.now() - startTime;
-
-            if (result.success) {
-                logger.info({
-                    tool_name: name,
-                    project_id: parsedArgs.project_id,
-                    duration_ms: durationMs,
-                    status: "success",
-                }, "Tool call completed successfully");
-            } else {
-                logger.warn({
-                    tool_name: name,
-                    project_id: parsedArgs.project_id,
                     duration_ms: durationMs,
                     status: "execution_error",
                     reason: result.output,
@@ -620,11 +545,6 @@ async function main() {
                     name: createRemoteProjectTool.name,
                     description: createRemoteProjectTool.description,
                     inputSchema: createRemoteProjectTool.inputSchema, // SDK will convert Zod to JSON Schema
-                },
-                {
-                    name: remoteKdoctorTool.name,
-                    description: remoteKdoctorTool.description,
-                    inputSchema: remoteKdoctorTool.inputSchema, // SDK will convert Zod to JSON Schema
                 },
                 {
                     name: remoteCleanProjectTool.name,
