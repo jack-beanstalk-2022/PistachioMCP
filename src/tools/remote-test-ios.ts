@@ -11,7 +11,7 @@ import { logger } from "../utils/Logger.js";
 
 const SCHEME = "iosApp";
 const SIMULATOR_NAME = "iPhone 17 Pro Max";
-const SIMULATOR_OS = "26.1";
+const SIMULATOR_OS = "26.2";
 const DESTINATION = `platform=iOS Simulator,name=${SIMULATOR_NAME},OS=${SIMULATOR_OS}`;
 
 const execAsync = promisify(exec);

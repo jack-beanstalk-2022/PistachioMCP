@@ -127,12 +127,12 @@ describe("remoteTestIosTool", () => {
     const SIMULATOR_UDID = "ABC123-4567-8901";
     const SIMULATOR_NAME = "iPhone 17 Pro Max";
     const simulatorListOutput = `== Devices ==
--- iOS 26.1 --
+-- iOS 26.2 --
     ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Booted)
     iPhone 15 Pro (DEF456-7890-1234) (Shutdown)`;
 
     const simulatorListAvailableOutput = `== Devices ==
--- iOS 26.1 --
+-- iOS 26.2 --
     ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Available)
     iPhone 15 Pro (DEF456-7890-1234) (Available)`;
 
@@ -219,10 +219,10 @@ describe("remoteTestIosTool", () => {
         });
 
         it("should return error when simulator not found", async () => {
-            mockExecResponse("== Devices ==\n-- iOS 26.1 --\n    iPhone 15 Pro (DEF456-7890-1234) (Available)", "", false, "xcrun simctl list devices available");
+            mockExecResponse("== Devices ==\n-- iOS 26.2 --\n    iPhone 15 Pro (DEF456-7890-1234) (Available)", "", false, "xcrun simctl list devices available");
             const result = await remoteTestIosTool.handler(testArgs);
             expect(result.success).toBe(false);
-            expect(result.output).toContain("Simulator \"iPhone 17 Pro Max\" with OS 26.1 not found");
+            expect(result.output).toContain("Simulator \"iPhone 17 Pro Max\" with OS 26.2 not found");
         });
 
         it("should parse simulator UDID correctly", async () => {
@@ -256,7 +256,7 @@ describe("remoteTestIosTool", () => {
                     callCount++;
                     if (callCount === 1) {
                         // First call: simulator is shutdown
-                        res = { stdout: `== Devices ==\n-- iOS 26.1 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
+                        res = { stdout: `== Devices ==\n-- iOS 26.2 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
                     } else {
                         // Subsequent calls: simulator is booted
                         res = { stdout: simulatorListOutput, stderr: "" };
@@ -290,9 +290,9 @@ describe("remoteTestIosTool", () => {
                 } else if (command.includes("xcrun simctl list devices")) {
                     callCount++;
                     if (callCount === 1) {
-                        res = { stdout: `== Devices ==\n-- iOS 26.1 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
+                        res = { stdout: `== Devices ==\n-- iOS 26.2 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
                     } else {
-                        res = { stdout: `== Devices ==\n-- iOS 26.1 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
+                        res = { stdout: `== Devices ==\n-- iOS 26.2 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
                     }
                 } else if (command.includes("xcrun simctl boot")) {
                     res = { stdout: "", stderr: "", error: new Error("Boot failed") };
@@ -313,7 +313,7 @@ describe("remoteTestIosTool", () => {
                     res = { stdout: simulatorListAvailableOutput, stderr: "" };
                 } else if (command.includes("xcrun simctl list devices")) {
                     // Always return shutdown status
-                    res = { stdout: `== Devices ==\n-- iOS 26.1 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
+                    res = { stdout: `== Devices ==\n-- iOS 26.2 --\n    ${SIMULATOR_NAME} (${SIMULATOR_UDID}) (Shutdown)`, stderr: "" };
                 } else if (command.includes("xcrun simctl boot")) {
                     res = { stdout: "", stderr: "" };
                 }
