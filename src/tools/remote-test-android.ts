@@ -361,14 +361,21 @@ export const remoteTestAndroidTool = {
             }
 
 
-            // Determine success based on whether the test passed
-            // Check for test failure indicators in adb shell am instrument output
+            // Determine success based on whether the test passed.
+            //
+            // NOTE: `adb shell am instrument` output is not perfectly standardized across runners / versions.
+            // In particular, `INSTRUMENTATION_CODE` values can be confusing and should not be the sole signal.
+            // Prefer explicit JUnit summary markers and obvious instrumentation failure markers.
             const hasFailureIndicators =
+                // JUnit-style summary (common with AndroidJUnitRunner)
                 output.includes("FAILURES!!!") ||
-                output.includes("INSTRUMENTATION_STATUS_CODE: -1") ||
-                output.includes("INSTRUMENTATION_FAILED") ||
+                /Tests run:\s*\d+,\s*Failures:\s*[1-9]\d*/.test(output) ||
+                // Instrumentation-level failures / crashes
+                /INSTRUMENTATION_(?:FAILED|STATUS_CODE:\s*-1)\b/.test(output) ||
+                /INSTRUMENTATION_RESULT:.*(?:shortMsg|longMsg)=.*(?:fail|crash|exception)/i.test(output) ||
+                // Generic failure strings (app/framework dependent)
                 output.includes("Test failed") ||
-                /Tests run: \d+,.*Failures: [1-9]/.test(output);
+                /(java\.lang\.\w+(?:Exception|Error)|kotlin\.\w+Exception)/.test(output);
 
             // Step 10: Clean up - uninstall test and binary
             try {
