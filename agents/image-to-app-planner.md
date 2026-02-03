@@ -1,6 +1,6 @@
 ---
 name: image-to-app-planner
-description: Make a plan on how to replicate a mobile app from a set of screenshots
+description: Set up the Pistachio project from a set of screenshots
 mode: subagent
 ---
 Follow these steps:
@@ -9,8 +9,9 @@ Follow these steps:
 2. Carefully analyze the screenshots one by one. Identify the common components (e.g. NavBar). Each component MUST be:
 - shared across multiple screens.
 - more complex than a button, contains multiple sub-components to be worthy to componentize.
+- ignore top status bar.
 
-3. Create a .md (e.g. NavBar.md) for each component in project_dir/components/, list ONLY the paths to the screenshots that contain the component.
+3. Create a .md (e.g. NavBar.md) for each component in project_dir/components/, start with one-liner description of the componet, then list ONLY the paths to the screenshots that contain the component.
 
 4. For each screenshot, create a .md (e.g. Home.md) in project_dir/screens/, fill the first line with path to the screenshot, then list ONLY the components that the screen
 contains. Use the implementation path for the components project_dir/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/{component_name}.kt
@@ -34,3 +35,5 @@ contains. Use the implementation path for the components project_dir/composeApp/
 
 # Others
 ## No shadows, always flat design
+
+6. Return
