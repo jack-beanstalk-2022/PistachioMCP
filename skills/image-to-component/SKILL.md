@@ -5,7 +5,7 @@ license: Complete terms in LICENSE.txt
 ---
 Following these steps:
 1. Analyze the screenshots.
-2. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_ID}/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ for the component.
+2. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_NAME}/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ for the component.
 3. Build the component, focus on visual fidelity on the layout, size, padding and positioning.
    -Ignore other parts of the screenshots.
    -If the component contains images, use search_image tool to find image assets, use composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ImageUrlExample.kt as a template to display image urls.

@@ -4,7 +4,7 @@ description: Run instrumented test on android simulator for a Pistachio project.
 license: Complete terms in LICENSE.txt
 ---
 Following these steps:
-1. Find the project directory (pwd + / + {PISTACHIO_PROJECT_ID})
-2. Find the test_suite_name and test_name to run in {PISTACHIO_PROJECT_ID}/composeApp/src/androidInstrumentedTest/kotlin/com/jetbrains/kmpapp/.
+1. Find the project directory (pwd + / + {PISTACHIO_PROJECT_NAME})
+2. Find the test_suite_name and test_name to run in {PISTACHIO_PROJECT_NAME}/composeApp/src/androidInstrumentedTest/kotlin/com/jetbrains/kmpapp/.
 3. Run the test with "tsx test-android.ts path/to/project com.jetfrains.kmpapp {test_suite_name} {test_name}".
 4. Examine the error log and the frames*{test_name} folder. Remove the frames*{test_name} folder afterwards.

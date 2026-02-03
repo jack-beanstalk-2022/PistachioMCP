@@ -5,7 +5,7 @@ license: Complete terms in LICENSE.txt
 ---
 Following these steps:
 1. Analyze the screenshot. Identify the part already implemented by the given components.
-2. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_ID}/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ for the screen.
+2. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_NAME}/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ for the screen.
 3. Replicate the screenshot using the existing components, focus on visual fidelity on the layout, size, padding and positioning.
    -Ignore top status bar if the screenshot contains it.
    -If the screen contains images, use search_image tool to find image assets, use composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/screens/ImageUrlExample.kt as a template to display image urls.

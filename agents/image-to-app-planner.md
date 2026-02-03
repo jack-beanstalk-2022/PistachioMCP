@@ -4,7 +4,7 @@ description: Set up the Pistachio project from a set of screenshots
 mode: subagent
 ---
 Follow these steps:
-1. Verify the project directory (pwd + / + {PISTACHIO_PROJECT_ID}).
+1. Verify the project directory (pwd + / + {PISTACHIO_PROJECT_NAME}).
 
 2. Carefully analyze the screenshots one by one. Identify the common components (e.g. NavBar). Each component MUST be:
 - shared across multiple screens.

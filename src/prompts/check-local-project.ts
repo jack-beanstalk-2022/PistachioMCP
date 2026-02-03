@@ -1,24 +1,24 @@
 import { z } from "zod";
 
 /**
- * Prompt template for creating a local project
+ * Prompt template for checking a local project
  */
-export const createLocalProjectPrompt = {
-    name: "create_local_project",
-    description: "Creates a new local Pistachio project by cloning the template and setting up all required dependencies for Android and iOS development",
-    arguments: z.object({
-        project_name: z.string().describe("The name of the project to create"),
-    }),
-    handler: (args: { project_name: string; }) => {
-        const { project_name } = args;
-        const repoUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
+export const checkLocalProjectPrompt = {
+  name: "check_local_project",
+  description: "Checks local project directory and installs dependencies if needed",
+  arguments: z.object({
+    project_name: z.string().describe("The name of the project to create"),
+  }),
+  handler: (args: { project_name: string; }) => {
+    const { project_name } = args;
+    const repoUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
 
-        return [
-            {
-                role: "user" as const,
-                content: {
-                    type: "text" as const,
-                    text: `
+    return [
+      {
+        role: "user" as const,
+        content: {
+          type: "text" as const,
+          text: `
 Follow these steps to set up a local project:
 
 1. Install Git:
@@ -97,36 +97,26 @@ Follow these steps to set up a local project:
      * Install xcparse: "brew install chargepoint/xcparse/xcparse"
    - Verify installation: "xcparse version"
 
-7. Clone the PistachioTemplate repository:
-   - Navigate to the directory where you want to create the project
-   - Clone the repository: "git clone ${repoUrl} ${project_name}"
-   - Navigate into the project directory: "cd ${project_name}"
+7. Check the project repository:
+   - Search for PISTACHIO_PROJECT_NAME in the following files:
+     - .cursor/rules
+     - CLAUDE.md or .claude/CLAUDE.md
+     - .opencode/AGENTS.md
+   If the file already contains a PISTACHIO_PROJECT_NAME, use that value and return. Otherwise, save a line PISTACHIO_PROJECT_NAME=${project_name}. 
+   - Check if the project repository exists: "ls -la ${project_name}". If yes, return.
+   - Otherwise, clone the repository: "git clone ${repoUrl} ${project_name}".
 
 8. Install project dependencies:
-   - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
+   - Navigate into the project directory: "cd ${project_name}"
+  - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
    - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
    - Install dependencies and sync project:
-     * Run: "./gradlew build" (macOS/Linux) or "gradlew.bat build" (Windows)
+     * Run: "./gradlew assembleDebug" (macOS/Linux) or "gradlew.bat assembleDebug" (Windows)
      * This will download all required dependencies.
    - For iOS dependencies (macOS only):
      * Navigate to iosApp directory: "cd iosApp"
      * Install CocoaPods dependencies: "pod install"
      * Return to project root: "cd .."
-
-9. Verify the setup:
-   - Check that all tools are accessible:
-     * "git --version"
-     * "java -version"
-     * "echo $ANDROID_HOME" (or "echo %ANDROID_HOME%" on Windows)
-     * "adb version"
-     * "xcodebuild -version" (macOS only)
-     * "pod --version" (macOS only)
-   - Verify project structure:
-     * Check that the project has "composeApp" and "iosApp" directories
-
-10. Test the setup:
-   - Try building the Android app: "./gradlew :composeApp:assembleDebug" (macOS/Linux) or "gradlew.bat :composeApp:assembleDebug" (Windows)
-   - Try building the iOS app (macOS only): "./gradlew iosArm64Binaries"
 
 IMPORTANT NOTES:
 - If any installation step fails, provide clear error messages and suggest troubleshooting steps.
@@ -134,8 +124,8 @@ IMPORTANT NOTES:
 - On macOS, you may need to restart the terminal or run "source ~/.zshrc" (or "source ~/.bash_profile") after setting environment variables.
 - On Windows, you may need to restart the terminal or restart the computer after setting environment variables.
                     `,
-                },
-            },
-        ];
-    },
+        },
+      },
+    ];
+  },
 };

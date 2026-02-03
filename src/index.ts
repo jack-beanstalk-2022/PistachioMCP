@@ -10,7 +10,7 @@ import {
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { createRemoteProjectPrompt } from "./prompts/create-remote-project.js";
-import { createLocalProjectPrompt } from "./prompts/create-local-project.js";
+import { checkLocalProjectPrompt } from "./prompts/check-local-project.js";
 import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
 import { testIosRemotePrompt } from "./prompts/test-ios-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
@@ -260,8 +260,8 @@ async function main() {
                     ],
                 },
                 {
-                    name: createLocalProjectPrompt.name,
-                    description: createLocalProjectPrompt.description,
+                    name: checkLocalProjectPrompt.name,
+                    description: checkLocalProjectPrompt.description,
                     arguments: [
                         {
                             name: "project_name",
@@ -405,10 +405,10 @@ async function main() {
             }
         }
 
-        if (name === createLocalProjectPrompt.name) {
+        if (name === checkLocalProjectPrompt.name) {
             try {
-                const typedArgs = createLocalProjectPrompt.arguments.parse(args);
-                const messages = createLocalProjectPrompt.handler(typedArgs);
+                const typedArgs = checkLocalProjectPrompt.arguments.parse(args);
+                const messages = checkLocalProjectPrompt.handler(typedArgs);
                 const durationMs = Date.now() - startTime;
 
                 logger.info({
@@ -418,7 +418,7 @@ async function main() {
                 }, "Prompt request completed successfully");
 
                 return {
-                    description: createLocalProjectPrompt.description,
+                    description: checkLocalProjectPrompt.description,
                     messages,
                 };
             } catch (error) {
