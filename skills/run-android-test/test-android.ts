@@ -344,17 +344,57 @@ async function main() {
                 framesDir = join(project_dir, `frames_${test_name}`);
                 mkdirSync(framesDir, { recursive: true });
 
-                // Extract frames using ffmpeg
-                await execAsync(
-                    `ffmpeg -i "${localScreenRecordPath}" -vf "fps=1,scale=320:-1" -q:v 6 "${join(framesDir, "frame_%04d.jpg")}"`
-                );
+                // Get video duration to handle short videos
+                let duration = 0;
+                try {
+                    const { stdout: durationStr } = await execAsync(
+                        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${localScreenRecordPath}"`
+                    );
+                    duration = parseFloat(durationStr.trim());
+                } catch {
+                    // ffprobe might not be available
+                }
 
-                // Count frame files
-                const frameFiles = readdirSync(framesDir)
-                    .filter((file) => file.startsWith("frame_") && file.endsWith(".jpg"))
-                    .sort();
+                if (duration > 0 && duration < 1) {
+                    // Extract all frames
+                    await execAsync(
+                        `ffmpeg -i "${localScreenRecordPath}" -vf "scale=320:-1" -vsync vfr -q:v 6 "${join(framesDir, "frame_%05d.jpg")}"`
+                    );
+                    const frameFiles = readdirSync(framesDir)
+                        .filter((file) => file.startsWith("frame_") && file.endsWith(".jpg"))
+                        .sort();
+                    // Keep only the last frame
+                    for (let i = 0; i < frameFiles.length - 1; i++) {
+                        unlinkSync(join(framesDir, frameFiles[i]));
+                    }
+                    frameCount = frameFiles.length > 0 ? 1 : 0;
+                } else {
+                    // Extract frames using ffmpeg at 1fps
+                    await execAsync(
+                        `ffmpeg -i "${localScreenRecordPath}" -vf "fps=1,scale=320:-1" -q:v 6 "${join(framesDir, "frame_%04d.jpg")}"`
+                    );
+                    const frameFiles = readdirSync(framesDir)
+                        .filter((file) => file.startsWith("frame_") && file.endsWith(".jpg"))
+                        .sort();
+                    frameCount = frameFiles.length
+                }
 
-                frameCount = frameFiles.length;
+
+                // If no frames were extracted (e.g., video was short but ffprobe failed or returned 0)
+                if (frameCount === 0) {
+                    // Extract all frames
+                    await execAsync(
+                        `ffmpeg -i "${localScreenRecordPath}" -vf "scale=320:-1" -vsync vfr -q:v 6 "${join(framesDir, "frame_%05d.jpg")}"`
+                    );
+                    const frameFiles = readdirSync(framesDir)
+                        .filter((file) => file.startsWith("frame_") && file.endsWith(".jpg"))
+                        .sort();
+                    // Keep only the last frame
+                    for (let i = 0; i < frameFiles.length - 1; i++) {
+                        unlinkSync(join(framesDir, frameFiles[i]));
+                    }
+                    frameCount = frameFiles.length > 0 ? 1 : 0;
+                }
             } catch (error) {
                 // Log but don't fail if frame extraction fails
                 const errorMessage = error instanceof Error ? error.message : String(error);
