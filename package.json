@@ -2,7 +2,7 @@
   "name": "pistachio-mcp",
   "version": "1.0.0",
   "description": "MCP server for mobile app development",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
