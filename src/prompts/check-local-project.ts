@@ -84,20 +84,13 @@ Follow these steps to set up a local project:
    - Install Xcode Command Line Tools: "xcode-select --install"
    - Verify installation: "xcodebuild -version" and "xcode-select -p"
 
-5. Install CocoaPods (macOS only):
-   - Check if CocoaPods is installed: "pod --version"
-   - If CocoaPods is not installed:
-     * Install Ruby if not present: "ruby --version"
-     * Install CocoaPods: "sudo gem install cocoapods"
-   - Verify installation: "pod --version"
-
-6. Install xcparse (macOS only):
+5. Install xcparse (macOS only):
    - Check if xcparse is installed: "xcparse version"
    - If xcparse is not installed:
      * Install xcparse: "brew install chargepoint/xcparse/xcparse"
    - Verify installation: "xcparse version"
 
-7. Check the project repository:
+6. Check the project repository:
    - Search for PISTACHIO_PROJECT_NAME in the following files:
      - .cursor/rules
      - CLAUDE.md or .claude/CLAUDE.md
@@ -106,17 +99,13 @@ Follow these steps to set up a local project:
    - Check if the project repository exists: "ls -la ${project_name}". If yes, return.
    - Otherwise, clone the repository: "git clone ${repoUrl} ${project_name}".
 
-8. Install project dependencies:
+7. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
   - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
    - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
    - Install dependencies and sync project:
      * Run: "./gradlew assembleDebug" (macOS/Linux) or "gradlew.bat assembleDebug" (Windows)
      * This will download all required dependencies.
-   - For iOS dependencies (macOS only):
-     * Navigate to iosApp directory: "cd iosApp"
-     * Install CocoaPods dependencies: "pod install"
-     * Return to project root: "cd .."
 
 IMPORTANT NOTES:
 - If any installation step fails, provide clear error messages and suggest troubleshooting steps.
