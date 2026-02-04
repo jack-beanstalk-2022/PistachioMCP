@@ -9,10 +9,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
-import { createRemoteProjectPrompt } from "./prompts/create-remote-project.js";
 import { checkLocalProjectPrompt } from "./prompts/check-local-project.js";
-import { testAndroidRemotePrompt } from "./prompts/test-android-remote.js";
-import { testIosRemotePrompt } from "./prompts/test-ios-remote.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { logger } from "./utils/Logger.js";
 import * as http from "http";
@@ -249,45 +246,12 @@ async function main() {
         return {
             prompts: [
                 {
-                    name: createRemoteProjectPrompt.name,
-                    description: createRemoteProjectPrompt.description,
-                    arguments: [
-                        {
-                            name: "project_name",
-                            description: "The name of the project to create",
-                            type: "string",
-                        },
-                    ],
-                },
-                {
                     name: checkLocalProjectPrompt.name,
                     description: checkLocalProjectPrompt.description,
                     arguments: [
                         {
                             name: "project_name",
                             description: "The name of the project to create",
-                            type: "string",
-                        },
-                    ],
-                },
-                {
-                    name: testAndroidRemotePrompt.name,
-                    description: testAndroidRemotePrompt.description,
-                    arguments: [
-                        {
-                            name: "description",
-                            description: "Description of the test",
-                            type: "string",
-                        },
-                    ],
-                },
-                {
-                    name: testIosRemotePrompt.name,
-                    description: testIosRemotePrompt.description,
-                    arguments: [
-                        {
-                            name: "description",
-                            description: "Description of the test",
                             type: "string",
                         },
                     ],
@@ -299,111 +263,6 @@ async function main() {
     server.setRequestHandler(GetPromptRequestSchema, (request) => {
         const { name, arguments: args } = request.params;
         const startTime = Date.now();
-
-        if (name === createRemoteProjectPrompt.name) {
-            try {
-                const typedArgs = createRemoteProjectPrompt.arguments.parse(args);
-                const messages = createRemoteProjectPrompt.handler(typedArgs);
-                const durationMs = Date.now() - startTime;
-
-                logger.info({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "success",
-                }, "Prompt request completed successfully");
-
-                return {
-                    description: createRemoteProjectPrompt.description,
-                    messages,
-                };
-            } catch (error) {
-                const durationMs = Date.now() - startTime;
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                const errorStack = error instanceof Error ? error.stack : undefined;
-
-                logger.error({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "error",
-                    error_message: errorMessage,
-                    stack: errorStack,
-                }, "Prompt request failed");
-
-                throw new Error(
-                    `Error generating prompt: ${errorMessage}`
-                );
-            }
-        }
-
-        if (name === testAndroidRemotePrompt.name) {
-            try {
-                const typedArgs = testAndroidRemotePrompt.arguments.parse(args);
-                const messages = testAndroidRemotePrompt.handler(typedArgs);
-                const durationMs = Date.now() - startTime;
-
-                logger.info({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "success",
-                }, "Prompt request completed successfully");
-
-                return {
-                    description: testAndroidRemotePrompt.description,
-                    messages,
-                };
-            } catch (error) {
-                const durationMs = Date.now() - startTime;
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                const errorStack = error instanceof Error ? error.stack : undefined;
-
-                logger.error({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "error",
-                    error_message: errorMessage,
-                    stack: errorStack,
-                }, "Prompt request failed");
-
-                throw new Error(
-                    `Error generating prompt: ${errorMessage}`
-                );
-            }
-        }
-
-        if (name === testIosRemotePrompt.name) {
-            try {
-                const typedArgs = testIosRemotePrompt.arguments.parse(args);
-                const messages = testIosRemotePrompt.handler(typedArgs);
-                const durationMs = Date.now() - startTime;
-
-                logger.info({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "success",
-                }, "Prompt request completed successfully");
-
-                return {
-                    description: testIosRemotePrompt.description,
-                    messages,
-                };
-            } catch (error) {
-                const durationMs = Date.now() - startTime;
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                const errorStack = error instanceof Error ? error.stack : undefined;
-
-                logger.error({
-                    prompt_name: name,
-                    duration_ms: durationMs,
-                    status: "error",
-                    error_message: errorMessage,
-                    stack: errorStack,
-                }, "Prompt request failed");
-
-                throw new Error(
-                    `Error generating prompt: ${errorMessage}`
-                );
-            }
-        }
 
         if (name === checkLocalProjectPrompt.name) {
             try {
