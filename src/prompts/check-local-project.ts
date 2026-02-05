@@ -49,7 +49,7 @@ Follow these steps to set up a local project:
        sudo apt-get update && sudo apt-get install openjdk-21-jdk (Ubuntu/Debian)
        sudo yum install java-21-openjdk-devel (RHEL/CentOS)
        Set JAVA_HOME: export JAVA_HOME=/usr/lib/jvm/java-21-openjdk (adjust path as needed)
-     * On Windows: Download and install JDK 21 or later from https://adoptium.net/ or Oracle, then set JAVA_HOME environment variable
+     * On Windows: Download and install JDK 21 or later from https://adoptium.net/temurin/releases?version=21&os=windows, then set JAVA_HOME environment variable
    - Verify installation: "java -version" and "echo $JAVA_HOME" (or "echo %JAVA_HOME%" on Windows)
 
 3. Install Android Studio and Android SDK:
@@ -83,7 +83,21 @@ Follow these steps to set up a local project:
    - If tsx is not installed:
      * Install tsx: "npm install -g tsx"
 
-5. Install Xcode (macOS only):
+5. Install ffmpeg:
+   - Check if ffmpeg is installed: "ffmpeg -version"
+   - If ffmpeg is not installed:
+     * On macOS: "brew install ffmpeg"
+     * On Linux:
+       - Ubuntu/Debian: "sudo apt-get update && sudo apt-get install ffmpeg"
+       - Fedora: "sudo dnf install ffmpeg"
+       - RHEL/CentOS: "sudo yum install ffmpeg" (or enable EPEL first if needed)
+       - Arch: "sudo pacman -S ffmpeg"
+     * On Windows:
+       - Option A (winget): "winget install ffmpeg" or "winget install Gyan.FFmpeg"
+       - Option B (manual): Download from https://ffmpeg.org/download.html#build-windows, extract, and add the bin folder to PATH
+   - Verify installation: "ffmpeg -version"
+
+6. Install Xcode (macOS only):
    - Check if Xcode is installed: "xcode-select -p" or check if "/Applications/Xcode.app" exists
    - If Xcode is not installed:
      * Install from Mac App Store: "open -a 'App Store'"
@@ -93,13 +107,13 @@ Follow these steps to set up a local project:
    - Install Xcode Command Line Tools: "xcode-select --install"
    - Verify installation: "xcodebuild -version" and "xcode-select -p"
 
-6. Install xcparse (macOS only):
+7. Install xcparse (macOS only):
    - Check if xcparse is installed: "xcparse version"
    - If xcparse is not installed:
      * Install xcparse: "brew install chargepoint/xcparse/xcparse"
    - Verify installation: "xcparse version"
 
-7. Check the project repository:
+8. Check the project repository:
    - Search for PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME in the following files:
      - .cursor/rules
      - CLAUDE.md or .claude/CLAUDE.md
@@ -110,13 +124,13 @@ Follow these steps to set up a local project:
    - Run tsx rebrand.ts ${project_name} ${package_name} 
    - Commit the rebrand changes: "git add . && git commit -m "Rebrand project to ${project_name} and ${package_name}"".
 
-8. Install Pistachio SKILLs and AGENTs (auto-download):
+9. Install Pistachio SKILLs and AGENTs (auto-download):
    - Download the installer: "curl -fsSL -o install-pistachio.ts https://pistachio-ai.com/install-pistachio.ts"
    - Run the installer to sync SKILLs and AGENTs into the project: "tsx install-pistachio.ts pwd/.claude"
    - The first argument is the absolute path for .claude or .opencode in root directory (parent of {PISTACHIO_PROJECT_NAME}/).
    - Run an android test to verify the installation: "tsx test-android.ts {pwd / PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME//./\/} SvgIconExampleTest testSvgIconExampleDisplaysAllElements".
 
-9. Install project dependencies:
+10. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
   - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
    - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
