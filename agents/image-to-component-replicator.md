@@ -15,13 +15,13 @@ skills:
 # Instructions
 1. Read component_md file and the screenshots it points to.
 2. Read style_md file that contains the style guide.
-3. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_NAME}/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/components/ for the component.
+3. Create a Kotlin Multiplatform Compose .kt file in {PISTACHIO_PROJECT_NAME}/composeApp/src/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/components/ for the component.
 4. Build the component, focus on visual fidelity on the layout, size, padding and positioning.
    -Ignore other parts of the screenshots.
-   -If the component contains images, use search_image tool to find image assets, use composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/examples/ImageUrlExample.kt as a template to display image urls.
-   -Use search_icon tool to find consistent icons from the same icon set. Save .svg directly in composeApp/src/commonMain/valkyrieResources/. Call ./gradlew generateValkyrieImageVector and examine the output in composeApp/build/generated/sources/valkyrie/commonMain/kotlin/com/jetbrains/kmpapp/icons. Use composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/examples/SvgIconExample.kt as a template to display icons.
-   -If the component contains map, use composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/examples/MapExample.kt as a template to show a Map.
-5. Create a new test that derives from BaseComposeTest in composeApp/src/androidInstrumentedTest/kotlin/com/jetbrains/kmpapp/
+   -If the component contains images, use search_image tool to find image assets, use composeApp/src/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/examples/ImageUrlExample.kt as a template to display image urls.
+   -Use search_icon tool to find consistent icons from the same icon set. Save .svg directly in composeApp/src/commonMain/valkyrieResources/. Call ./gradlew generateValkyrieImageVector and examine the output in composeApp/build/generated/sources/valkyrie/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/icons. Use composeApp/src/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/examples/SvgIconExample.kt as a template to display icons.
+   -If the component contains map, use composeApp/src/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/examples/MapExample.kt as a template to show a Map.
+5. Create a new test that derives from BaseComposeTest in composeApp/src/androidInstrumentedTest/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/
 6. Use run-android-test skill to run the test.
 7. Analyze the resulting logs and snapshots from the test:
 - Identify and fix any runtime issues

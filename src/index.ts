@@ -255,6 +255,11 @@ async function main() {
                             description: "The name of the project to create",
                             type: "string",
                         },
+                        {
+                            name: "package_name",
+                            description: "The package name of the project, e.g. com.company.myapp",
+                            type: "string",
+                        },
                     ],
                 },
                 {

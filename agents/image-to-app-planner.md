@@ -14,7 +14,7 @@ Follow these steps:
 3. Create a .md (e.g. NavBar.md) for each component in project_dir/components/, start with one-liner description of the componet, then list ONLY the paths to the screenshots that contain the component.
 
 4. For each screenshot, create a .md (e.g. Home.md) in project_dir/screens/, fill the first line with path to the screenshot, then list ONLY the components that the screen
-contains. Use the implementation path for the components project_dir/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/components/{component_name}.kt
+contains. Use the implementation path for the components project_dir/composeApp/src/commonMain/kotlin/{PISTACHIO_PACKAGE_NAME//./\/}/components/{component_name}.kt
 
 5. Summarize the design in project_dir/STYLE.md, for example:
 # Color

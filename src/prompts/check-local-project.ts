@@ -8,9 +8,10 @@ export const checkLocalProjectPrompt = {
   description: "Checks local project directory and installs dependencies if needed",
   arguments: z.object({
     project_name: z.string().describe("The name of the project to create"),
+    package_name: z.string().describe("The package name of the project, e.g. com.company.myapp"),
   }),
-  handler: (args: { project_name: string; }) => {
-    const { project_name } = args;
+  handler: (args: { project_name: string; package_name: string }) => {
+    const { project_name, package_name } = args;
     const repoUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
 
     return [
@@ -99,13 +100,15 @@ Follow these steps to set up a local project:
    - Verify installation: "xcparse version"
 
 7. Check the project repository:
-   - Search for PISTACHIO_PROJECT_NAME in the following files:
+   - Search for PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME in the following files:
      - .cursor/rules
      - CLAUDE.md or .claude/CLAUDE.md
      - .opencode/AGENTS.md
-   If the file already contains a PISTACHIO_PROJECT_NAME, use that value and return. Otherwise, save a line PISTACHIO_PROJECT_NAME=${project_name}. 
+   If the file already contains a PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME, use that value and return. Otherwise, save two lines: PISTACHIO_PROJECT_NAME=${project_name} \n PISTACHIO_PACKAGE_NAME=${package_name}. 
    - Check if the project repository exists: "ls -la ${project_name}". If yes, return.
    - Otherwise, clone the repository: "git clone ${repoUrl} ${project_name}".
+   - Run tsx rebrand.ts ${project_name} ${package_name} 
+   - Commit the rebrand changes: "git add . && git commit -m "Rebrand project to ${project_name} and ${package_name}"".
 
 8. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
