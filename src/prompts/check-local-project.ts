@@ -74,7 +74,15 @@ Follow these steps to set up a local project:
      * Open Android Studio and go to Tools > SDK Manager
      * Install Android SDK Platform-Tools, Android SDK Build-Tools, and at least one Android SDK Platform
 
-4. Install Xcode (macOS only):
+4. Install node and tsx:
+   - Check if node is installed: "node --version"
+   - If node is not installed:
+     * Install node from https://nodejs.org/en/download/
+   - Check if tsx is installed: "tsx --version"
+   - If tsx is not installed:
+     * Install tsx: "npm install -g tsx"
+
+5. Install Xcode (macOS only):
    - Check if Xcode is installed: "xcode-select -p" or check if "/Applications/Xcode.app" exists
    - If Xcode is not installed:
      * Install from Mac App Store: "open -a 'App Store'"
@@ -84,13 +92,13 @@ Follow these steps to set up a local project:
    - Install Xcode Command Line Tools: "xcode-select --install"
    - Verify installation: "xcodebuild -version" and "xcode-select -p"
 
-5. Install xcparse (macOS only):
+6. Install xcparse (macOS only):
    - Check if xcparse is installed: "xcparse version"
    - If xcparse is not installed:
      * Install xcparse: "brew install chargepoint/xcparse/xcparse"
    - Verify installation: "xcparse version"
 
-6. Check the project repository:
+7. Check the project repository:
    - Search for PISTACHIO_PROJECT_NAME in the following files:
      - .cursor/rules
      - CLAUDE.md or .claude/CLAUDE.md
@@ -99,7 +107,7 @@ Follow these steps to set up a local project:
    - Check if the project repository exists: "ls -la ${project_name}". If yes, return.
    - Otherwise, clone the repository: "git clone ${repoUrl} ${project_name}".
 
-7. Install project dependencies:
+8. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
   - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
    - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
