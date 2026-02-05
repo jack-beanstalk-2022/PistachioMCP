@@ -1,5 +1,6 @@
 ---
 name: image-to-app-planner
+version: 1.0.0
 description: Set up the Pistachio project from a set of screenshots
 mode: subagent
 ---

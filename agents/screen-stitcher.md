@@ -1,5 +1,6 @@
 ---
 name: screen-stitcher
+version: 1.0.0
 description: Stitch the screens into a mobile app
 mode: subagent
 ---

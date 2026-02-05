@@ -1,5 +1,6 @@
 ---
 name: run-ios-test
+version: 1.0.0
 description: Run XCUITest on iOS simulator for a Pistachio project.
 license: Complete terms in LICENSE.txt
 ---

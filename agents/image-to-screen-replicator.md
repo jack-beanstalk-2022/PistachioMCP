@@ -1,5 +1,6 @@
 ---
 name: image-to-screen-replicator
+version: 1.0.0
 description: Replicate a single mobile screen from a .md file
 mode: subagent
 skills:

@@ -1,5 +1,6 @@
 ---
 name: gen-android-apk
+version: 1.0.0
 description: Generate an APK in designated directory for a Pistachio project.
 license: Complete terms in LICENSE.txt
 ---

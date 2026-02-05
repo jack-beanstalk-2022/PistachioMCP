@@ -1,5 +1,6 @@
 ---
 name: run-android-test
+version: 1.0.0
 description: Run instrumented test on android simulator for a Pistachio project.
 license: Complete terms in LICENSE.txt
 ---

@@ -1,5 +1,6 @@
 ---
 name: gen-ios-ipa
+version: 1.0.0
 description: Generate an unsigned IPA in designated directory for a Pistachio project.
 license: Complete terms in LICENSE.txt
 ---

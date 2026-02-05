@@ -1,5 +1,6 @@
 ---
 name: image-to-component-replicator
+version: 1.0.0
 description: Replicate a shared component from a .md file
 mode: subagent
 skills:

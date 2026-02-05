@@ -110,7 +110,13 @@ Follow these steps to set up a local project:
    - Run tsx rebrand.ts ${project_name} ${package_name} 
    - Commit the rebrand changes: "git add . && git commit -m "Rebrand project to ${project_name} and ${package_name}"".
 
-8. Install project dependencies:
+8. Install Pistachio SKILLs and AGENTs (auto-download):
+   - Download the installer: "curl -fsSL -o install-pistachio.ts https://pistachio-ai.com/install-pistachio.ts"
+   - Run the installer to sync SKILLs and AGENTs into the project: "tsx install-pistachio.ts pwd/.claude"
+   - The first argument is the absolute path for .claude or .opencode in root directory (parent of {PISTACHIO_PROJECT_NAME}/).
+   - Run an android test to verify the installation: "tsx test-android.ts {pwd / PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME//./\/} SvgIconExampleTest testSvgIconExampleDisplaysAllElements".
+
+9. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
   - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
    - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
