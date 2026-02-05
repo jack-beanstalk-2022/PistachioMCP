@@ -16,7 +16,7 @@ Follow these steps:
 4. For each screenshot, create a .md (e.g. Home.md) in project_dir/screens/, fill the first line with path to the screenshot, then list ONLY the components that the screen
 contains. Use the implementation path for the components project_dir/composeApp/src/commonMain/kotlin/com/jetbrains/kmpapp/components/{component_name}.kt
 
-5. Summarize the design in project_dir/STYLE.md:
+5. Summarize the design in project_dir/STYLE.md, for example:
 # Color
 ## Background: light gray #EFF3EA
 ## Primary / Accent: starbucks Green #00754A

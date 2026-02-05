@@ -10,6 +10,7 @@ import {
 import { searchImageTool } from "./tools/search-image.js";
 import { searchIconTool } from "./tools/search-icon.js";
 import { checkLocalProjectPrompt } from "./prompts/check-local-project.js";
+import { imageToAppPrompt } from "./prompts/image-to-app.js";
 import { TaskQueue } from "./utils/TaskQueueUtils.js";
 import { logger } from "./utils/Logger.js";
 import * as http from "http";
@@ -256,6 +257,18 @@ async function main() {
                         },
                     ],
                 },
+                {
+                    name: imageToAppPrompt.name,
+                    description: imageToAppPrompt.description,
+                    arguments: [
+                        {
+                            name: "screenshots_directory",
+                            description:
+                                "Absolute or relative path to the directory containing the app screenshots to replicate",
+                            type: "string",
+                        },
+                    ],
+                },
             ],
         };
     });
@@ -278,6 +291,41 @@ async function main() {
 
                 return {
                     description: checkLocalProjectPrompt.description,
+                    messages,
+                };
+            } catch (error) {
+                const durationMs = Date.now() - startTime;
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                const errorStack = error instanceof Error ? error.stack : undefined;
+
+                logger.error({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "error",
+                    error_message: errorMessage,
+                    stack: errorStack,
+                }, "Prompt request failed");
+
+                throw new Error(
+                    `Error generating prompt: ${errorMessage}`
+                );
+            }
+        }
+
+        if (name === imageToAppPrompt.name) {
+            try {
+                const typedArgs = imageToAppPrompt.arguments.parse(args);
+                const messages = imageToAppPrompt.handler(typedArgs);
+                const durationMs = Date.now() - startTime;
+
+                logger.info({
+                    prompt_name: name,
+                    duration_ms: durationMs,
+                    status: "success",
+                }, "Prompt request completed successfully");
+
+                return {
+                    description: imageToAppPrompt.description,
                     messages,
                 };
             } catch (error) {
