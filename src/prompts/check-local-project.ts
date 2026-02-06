@@ -35,7 +35,7 @@ Follow these steps to set up a local project:
        - Once Homebrew is installed: "brew install git"
        - Or download from https://git-scm.com/download/mac
      * On Linux: Use your package manager (e.g., "sudo apt-get install git" for Ubuntu/Debian, "sudo yum install git" for RHEL/CentOS)
-     * On Windows: Download and install from https://git-scm.com/download/win
+     * On Windows: Try "winget install Git.Git" or "choco install git"; otherwise download from https://git-scm.com/download/win
    - Verify installation: "git --version"
 
 2. Install Java Development Kit (JDK):
@@ -49,7 +49,7 @@ Follow these steps to set up a local project:
        sudo apt-get update && sudo apt-get install openjdk-21-jdk (Ubuntu/Debian)
        sudo yum install java-21-openjdk-devel (RHEL/CentOS)
        Set JAVA_HOME: export JAVA_HOME=/usr/lib/jvm/java-21-openjdk (adjust path as needed)
-     * On Windows: Download and install JDK 21 or later from https://adoptium.net/temurin/releases?version=21&os=windows, then set JAVA_HOME environment variable
+     * On Windows: Try "winget install -e --id Microsoft.OpenJDK.21" or "choco install temurin21"; otherwise download from https://adoptium.net/temurin/releases?version=21&os=windows, then set JAVA_HOME environment variable
    - Verify installation: "java -version" and "echo $JAVA_HOME" (or "echo %JAVA_HOME%" on Windows)
 
 3. Install Android Studio and Android SDK:
@@ -61,7 +61,7 @@ Follow these steps to set up a local project:
        - On Linux: Check common installation paths like "/opt/android-studio" or "$HOME/android-studio"
        - On Windows: Check if Android Studio is in Program Files: "dir "C:\\Program Files\\Android\\Android Studio"" or check registry
    - If Android Studio is not installed:
-     * Download from https://developer.android.com/studio
+     * On Windows: Try "winget install Google.AndroidStudio" or "choco install androidstudio"; otherwise download from https://developer.android.com/studio
      * Install Android Studio following the installation wizard
      * During setup, ensure Android SDK, Android SDK Platform, and Android Virtual Device (AVD) are installed
    - Set ANDROID_HOME environment variable:
@@ -78,7 +78,8 @@ Follow these steps to set up a local project:
 4. Install node and tsx:
    - Check if node is installed: "node --version"
    - If node is not installed:
-     * Install node from https://nodejs.org/en/download/
+     * On macOS/Linux: Install via package manager or from https://nodejs.org/en/download/
+     * On Windows: Try "winget install OpenJS.NodeJS.LTS" or "choco install nodejs-lts"; otherwise download from https://nodejs.org/en/download/
    - Check if tsx is installed: "tsx --version"
    - If tsx is not installed:
      * Install tsx: "npm install -g tsx"
@@ -92,9 +93,7 @@ Follow these steps to set up a local project:
        - Fedora: "sudo dnf install ffmpeg"
        - RHEL/CentOS: "sudo yum install ffmpeg" (or enable EPEL first if needed)
        - Arch: "sudo pacman -S ffmpeg"
-     * On Windows:
-       - Option A (winget): "winget install ffmpeg" or "winget install Gyan.FFmpeg"
-       - Option B (manual): Download from https://ffmpeg.org/download.html#build-windows, extract, and add the bin folder to PATH
+     * On Windows: Try "winget install ffmpeg" or "choco install ffmpeg"; otherwise download from https://ffmpeg.org/download.html#build-windows, extract, and add the bin folder to PATH
    - Verify installation: "ffmpeg -version"
 
 6. Install Xcode (macOS only):
