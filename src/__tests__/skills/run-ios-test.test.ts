@@ -160,7 +160,7 @@ describe("test-ios (skills/run-ios-test)", () => {
     });
 
     describe("getFirstIphoneSimulator", () => {
-        it("returns first iPhone simulator when OS version is >= 26.1", () => {
+        it("returns first iPhone simulator when OS version is >= 15.3", () => {
             const stdout = [
                 "-- iOS 26.1 --",
                 "    iPhone 16 Pro (A1B2C3D4-E5F6-7890-ABCD-EF1234567890) (Booted)",
@@ -177,7 +177,7 @@ describe("test-ios (skills/run-ios-test)", () => {
 
         it("returns null when no iOS section meets minimum OS version", () => {
             const stdout = [
-                "-- iOS 25.0 --",
+                "-- iOS 15.0 --",
                 "    iPhone 15 (A1B2C3D4-E5F6-7890-ABCD-EF1234567890) (Shutdown)",
             ].join("\n");
             const result = getFirstIphoneSimulator(stdout);
@@ -186,7 +186,7 @@ describe("test-ios (skills/run-ios-test)", () => {
 
         it("returns first matching device when multiple OS sections", () => {
             const stdout = [
-                "-- iOS 25.0 --",
+                "-- iOS 15.0 --",
                 "    iPhone 15 (A1B2C3D4-0000-0000-0000-000000000001) (Shutdown)",
                 "-- iOS 26.1 --",
                 "    iPhone 16 (A1B2C3D4-0000-0000-0000-000000000002) (Shutdown)",

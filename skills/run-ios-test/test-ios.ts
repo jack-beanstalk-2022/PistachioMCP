@@ -9,7 +9,7 @@ import { randomUUID } from "crypto";
 
 // Constants
 const SCHEME = "iosApp";
-const MIN_SIMULATOR_OS = "26.1";
+const MIN_SIMULATOR_OS = "15.3";
 const LOCK_TIMEOUT_MS = 30000;
 const LOCK_POLL_INTERVAL_MS = 1000;
 const SIMULATOR_BOOT_TIMEOUT_MS = 120000;
