@@ -55,27 +55,24 @@ Follow these steps to set up a local project:
 3. Install Android Studio and Android SDK:
    - Check if Android SDK is properly configured:
      * Check if ANDROID_HOME environment variable is set: "echo $ANDROID_HOME" (macOS/Linux) or "echo %ANDROID_HOME%" (Windows)
-     * Check if adb command is available: "adb version"
-     * Check if Android Studio app exists:
-       - On macOS: Check if "/Applications/Android Studio.app" exists: ls -d "/Applications/Android Studio.app"
-       - On Linux: Check common installation paths like "/opt/android-studio" or "$HOME/android-studio"
-       - On Windows: Check if Android Studio is in Program Files: "dir "C:\\Program Files\\Android\\Android Studio"" or check registry
-   - If Android Studio is not installed:
-     * On Windows: Try "winget install Google.AndroidStudio" or "choco install androidstudio"; otherwise download from https://developer.android.com/studio
-     * Install Android Studio following the installation wizard
-     * During setup, ensure Android SDK, Android SDK Platform, and Android Virtual Device (AVD) are installed
+     * Check if adb command is available: "adb version"  
+   - If Android SDK is not installed:
+     * On Windows: try "winget install Google.AndroidStudio" or "choco install androidstudio"; otherwise download from https://developer.android.com/studio
+     * On macOS/Linux: ask user to install from https://developer.android.com/studio/install
    - Set ANDROID_HOME environment variable:
-     * On macOS/Linux: 
+     * On macOS/Linux: verify the SDK path exists
        export ANDROID_HOME=$HOME/Library/Android/sdk (macOS) or $HOME/Android/Sdk (Linux)
        export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
        Add these to ~/.zshrc or ~/.bash_profile
-     * On Windows: Set ANDROID_HOME to C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk and add to PATH
+     * On Windows: set ANDROID_HOME to C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk and add to PATH
    - Verify installation: "echo $ANDROID_HOME" (or "echo %ANDROID_HOME%" on Windows) and "adb version"
-   - Install required Android SDK components:
-     * Open Android Studio and go to Tools > SDK Manager
-     * Install Android SDK Platform-Tools, Android SDK Build-Tools, and at least one Android SDK Platform
 
-4. Install node and tsx:
+4. Create Android Virtual Device (AVD):
+   - List existing AVDs: "emulator -list-avds".
+   - If emulator command is not accessible, add $ANDROID_HOME/emulator to PATH.
+   - If no AVD exists, ask user to create an AVD in Android Studio.
+
+5. Install node and tsx:
    - Check if node is installed: "node --version"
    - If node is not installed:
      * On macOS/Linux: Install via package manager or from https://nodejs.org/en/download/
@@ -84,7 +81,7 @@ Follow these steps to set up a local project:
    - If tsx is not installed:
      * Install tsx: "npm install -g tsx"
 
-5. Install ffmpeg:
+6. Install ffmpeg:
    - Check if ffmpeg is installed: "ffmpeg -version"
    - If ffmpeg is not installed:
      * On macOS: "brew install ffmpeg"
@@ -96,7 +93,7 @@ Follow these steps to set up a local project:
      * On Windows: Try "winget install ffmpeg" or "choco install ffmpeg"; otherwise download from https://ffmpeg.org/download.html#build-windows, extract, and add the bin folder to PATH
    - Verify installation: "ffmpeg -version"
 
-6. Install Xcode (macOS only):
+7. Install Xcode (macOS only):
    - Check if Xcode is installed: "xcode-select -p" or check if "/Applications/Xcode.app" exists
    - If Xcode is not installed:
      * Install from Mac App Store: "open -a 'App Store'"
@@ -106,13 +103,13 @@ Follow these steps to set up a local project:
    - Install Xcode Command Line Tools: "xcode-select --install"
    - Verify installation: "xcodebuild -version" and "xcode-select -p"
 
-7. Install xcparse (macOS only):
+8. Install xcparse (macOS only):
    - Check if xcparse is installed: "xcparse version"
    - If xcparse is not installed:
      * Install xcparse: "brew install chargepoint/xcparse/xcparse"
    - Verify installation: "xcparse version"
 
-8. Check the project repository:
+9. Check the project repository:
    - Search for PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME in the following files:
      - .cursor/rules
      - CLAUDE.md or .claude/CLAUDE.md
@@ -123,19 +120,18 @@ Follow these steps to set up a local project:
    - Run tsx rebrand.ts ${project_name} ${package_name} 
    - Commit the rebrand changes: "git add . && git commit -m "Rebrand project to ${project_name} and ${package_name}"".
 
-9. Install Pistachio SKILLs and AGENTs (auto-download):
+10. Install Pistachio SKILLs and AGENTs (auto-download):
    - Download the installer: "curl -fsSL -o install-pistachio.ts https://pistachio-ai.com/install-pistachio.ts"
    - Run the installer to sync SKILLs and AGENTs into the project: "tsx install-pistachio.ts pwd/.claude"
    - The first argument is the absolute path for .claude or .opencode in root directory (parent of {PISTACHIO_PROJECT_NAME}/).
-   - Run an android test to verify the installation: "tsx test-android.ts {pwd / PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME//./\/} SvgIconExampleTest testSvgIconExampleDisplaysAllElements".
 
-10. Install project dependencies:
+11. Install project dependencies:
    - Navigate into the project directory: "cd ${project_name}"
-  - Check if the project uses Gradle wrapper: Look for "gradlew" or "gradlew.bat" in the project root
-   - If using Gradle wrapper, make it executable (macOS/Linux): "chmod +x gradlew"
+   - Make it executable (macOS/Linux): "chmod +x gradlew"
    - Install dependencies and sync project:
      * Run: "./gradlew assembleDebug" (macOS/Linux) or "gradlew.bat assembleDebug" (Windows)
      * This will download all required dependencies.
+   - Run an android test to verify the installation: "tsx test-android.ts {pwd / PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME//./\/} SvgIconExampleTest testSvgIconExampleDisplaysAllElements".
 
 IMPORTANT NOTES:
 - If any installation step fails, provide clear error messages and suggest troubleshooting steps.
