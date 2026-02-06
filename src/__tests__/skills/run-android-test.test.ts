@@ -54,9 +54,13 @@ vi.mock("fs", async () => {
     };
 });
 
-vi.mock("os", () => ({
-    tmpdir: vi.fn(() => "/tmp"),
-}));
+vi.mock("os", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("os")>();
+    return {
+        ...actual,
+        tmpdir: vi.fn(() => "/tmp"),
+    };
+});
 
 import {
     parseArgs,

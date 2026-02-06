@@ -4,7 +4,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { join } from "path";
 import { existsSync, unlinkSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { tmpdir } from "os";
+import { tmpdir, platform } from "os";
 
 // Constants
 const PORT = 5554;
@@ -17,6 +17,9 @@ const DEBUG_APK_PATH_SUFFIX = "composeApp/build/outputs/apk/debug/composeApp-deb
 const TEST_APK_PATH_SUFFIX = "composeApp/build/outputs/apk/androidTest/debug/composeApp-debug-androidTest.apk";
 
 const execAsync = promisify(exec);
+
+/** Gradle wrapper command: gradlew.bat on Windows, ./gradlew on Unix */
+const GRADLEW = platform() === "win32" ? "gradlew.bat" : "./gradlew";
 
 /**
  * Type guard to check if an error has stdout/stderr properties
@@ -254,7 +257,7 @@ export async function runAndroidTest(
     // Step 1: Build debug APK
     console.log("Step 1: Building debug APK...");
     try {
-        await execAsync(`./gradlew assembleDebug`, { cwd: project_dir });
+        await execAsync(`${GRADLEW} assembleDebug`, { cwd: project_dir });
         console.log("✓ Debug APK built successfully");
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -264,7 +267,7 @@ export async function runAndroidTest(
     // Step 2: Build test APK
     console.log("Step 2: Building test APK...");
     try {
-        await execAsync(`./gradlew assembleDebugAndroidTest`, { cwd: project_dir });
+        await execAsync(`${GRADLEW} assembleDebugAndroidTest`, { cwd: project_dir });
         console.log("✓ Test APK built successfully");
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
