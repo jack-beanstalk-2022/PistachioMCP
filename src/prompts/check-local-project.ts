@@ -12,7 +12,6 @@ export const checkLocalProjectPrompt = {
   }),
   handler: (args: { project_name: string; package_name: string }) => {
     const { project_name, package_name } = args;
-    const repoUrl = "https://github.com/jack-beanstalk-2022/PistachioTemplate.git";
 
     return [
       {
@@ -20,118 +19,20 @@ export const checkLocalProjectPrompt = {
         content: {
           type: "text" as const,
           text: `
-Follow these steps to set up a local project:
-
-1. Install Git:
-   - Check if git is installed: "git --version"
-   - If git is not installed:
-     * On macOS: 
-       - If Homebrew is not installed, install it first:
-         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-         - Follow the on-screen instructions to complete the installation
-         - Add Homebrew to your PATH (if prompted): 
-           echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
-           eval "$(/opt/homebrew/bin/brew shellenv)"
-       - Once Homebrew is installed: "brew install git"
-       - Or download from https://git-scm.com/download/mac
-     * On Linux: Use your package manager (e.g., "sudo apt-get install git" for Ubuntu/Debian, "sudo yum install git" for RHEL/CentOS)
-     * On Windows: Try "winget install Git.Git" or "choco install git"; otherwise download from https://git-scm.com/download/win
-   - Verify installation: "git --version"
-
-2. Install Java Development Kit (JDK):
-   - Check if Java is installed: "java -version"
-   - Check if JAVA_HOME is set: "echo $JAVA_HOME" (macOS/Linux) or "echo %JAVA_HOME%" (Windows)
-   - If Java is not installed or JAVA_HOME is not set:
-     * On macOS: "brew install openjdk@21" and set JAVA_HOME:
-       export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-       echo 'export JAVA_HOME=$(/usr/libexec/java_home -v 21)' >> ~/.zshrc (or ~/.bash_profile)
-     * On Linux: Install OpenJDK 21 or later:
-       sudo apt-get update && sudo apt-get install openjdk-21-jdk (Ubuntu/Debian)
-       sudo yum install java-21-openjdk-devel (RHEL/CentOS)
-       Set JAVA_HOME: export JAVA_HOME=/usr/lib/jvm/java-21-openjdk (adjust path as needed)
-     * On Windows: Try "winget install -e --id Microsoft.OpenJDK.21" or "choco install temurin21"; otherwise download from https://adoptium.net/temurin/releases?version=21&os=windows, then set JAVA_HOME environment variable
-   - Verify installation: "java -version" and "echo $JAVA_HOME" (or "echo %JAVA_HOME%" on Windows)
-
-3. Install Android Studio and Android SDK:
-   - Check if Android SDK is properly configured:
-     * Check if ANDROID_HOME environment variable is set: "echo $ANDROID_HOME" (macOS/Linux) or "echo %ANDROID_HOME%" (Windows)
-     * Check if adb command is available: "adb version"  
-   - If Android SDK is not installed:
-     * On Windows: try "winget install Google.AndroidStudio" or "choco install androidstudio"; otherwise download from https://developer.android.com/studio
-     * On macOS/Linux: ask user to install from https://developer.android.com/studio/install
-   - Set ANDROID_HOME environment variable:
-     * On macOS/Linux: verify the SDK path exists
-       export ANDROID_HOME=$HOME/Library/Android/sdk (macOS) or $HOME/Android/Sdk (Linux)
-       export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
-       Add these to ~/.zshrc or ~/.bash_profile
-     * On Windows: set ANDROID_HOME to C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk and add to PATH
-   - Verify installation: "echo $ANDROID_HOME" (or "echo %ANDROID_HOME%" on Windows) and "adb version"
-
-4. Create Android Virtual Device (AVD):
-   - List existing AVDs: "emulator -list-avds".
-   - If emulator command is not accessible, add $ANDROID_HOME/emulator to PATH.
-   - If no AVD exists, ask user to create an AVD in Android Studio.
-
-5. Install node and tsx:
-   - Check if node is installed: "node --version"
-   - If node is not installed:
-     * On macOS/Linux: Install via package manager or from https://nodejs.org/en/download/
-     * On Windows: Try "winget install OpenJS.NodeJS.LTS" or "choco install nodejs-lts"; otherwise download from https://nodejs.org/en/download/
-   - Check if tsx is installed: "tsx --version"
-   - If tsx is not installed:
-     * Install tsx: "npm install -g tsx"
-
-6. Install ffmpeg:
-   - Check if ffmpeg is installed: "ffmpeg -version"
-   - If ffmpeg is not installed:
-     * On macOS: "brew install ffmpeg"
-     * On Linux:
-       - Ubuntu/Debian: "sudo apt-get update && sudo apt-get install ffmpeg"
-       - Fedora: "sudo dnf install ffmpeg"
-       - RHEL/CentOS: "sudo yum install ffmpeg" (or enable EPEL first if needed)
-       - Arch: "sudo pacman -S ffmpeg"
-     * On Windows: Try "winget install ffmpeg" or "choco install ffmpeg"; otherwise download from https://ffmpeg.org/download.html#build-windows, extract, and add the bin folder to PATH
-   - Verify installation: "ffmpeg -version"
-
-7. Install Xcode (macOS only):
-   - Check if Xcode is installed: "xcode-select -p" or check if "/Applications/Xcode.app" exists
-   - If Xcode is not installed:
-     * Install from Mac App Store: "open -a 'App Store'"
-     * Search for "Xcode" and install
-     * Or download from https://developer.apple.com/xcode/
-   - Accept Xcode license: "sudo xcodebuild -license accept"
-   - Install Xcode Command Line Tools: "xcode-select --install"
-   - Verify installation: "xcodebuild -version" and "xcode-select -p"
-
-8. Install xcparse (macOS only):
-   - Check if xcparse is installed: "xcparse version"
-   - If xcparse is not installed:
-     * Install xcparse: "brew install chargepoint/xcparse/xcparse"
-   - Verify installation: "xcparse version"
-
-9. Check the project repository:
+Follow these steps:
+1. Check the variables:
    - Search for PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME in the following files:
-     - .cursor/rules
-     - CLAUDE.md or .claude/CLAUDE.md
-     - .opencode/AGENTS.md
-   If the file already contains a PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME, use that value and return. Otherwise, save two lines: PISTACHIO_PROJECT_NAME=${project_name} \n PISTACHIO_PACKAGE_NAME=${package_name}. 
-   - Check if the project repository exists: "ls -la ${project_name}". If yes, return.
-   - Otherwise, clone the repository: "git clone ${repoUrl} ${project_name}".
-   - Run tsx rebrand.ts ${project_name} ${package_name} 
-   - Commit the rebrand changes: "git add . && git commit -m "Rebrand project to ${project_name} and ${package_name}"".
+     - CLAUDE.md or .claude/CLAUDE.md for claude code client
+     - .opencode/AGENTS.md for open code client
+   If the file already contains a PISTACHIO_PROJECT_NAME and PISTACHIO_PACKAGE_NAME, use that value and return. Otherwise, save two lines: PISTACHIO_PROJECT_NAME=${project_name} \n PISTACHIO_PACKAGE_NAME=${package_name}.
 
-10. Install Pistachio SKILLs and AGENTs (auto-download):
-   - Download the installer: "curl -fsSL -o install-pistachio.ts https://pistachio-ai.com/install-pistachio.ts"
-   - Run the installer to sync SKILLs and AGENTs into the project: "tsx install-pistachio.ts pwd/.claude"
-   - The first argument is the absolute path for .claude or .opencode in root directory (parent of {PISTACHIO_PROJECT_NAME}/).
+2. Install Pistachio SKILLs and AGENTs:
+   - Download the installer:
+     - on windows: "curl -fsSL -o install-pistachio.bat https://pistachio-ai.com/install-pistachio.bat"
+     - on macOS / linux: "curl -fsSL -o install-pistachio.sh https://pistachio-ai.com/install-pistachio.sh"
+   - Run the installer to sync SKILLs and AGENTs into the project: "install-pistachio.bat .claude" or "install-pistachio.sh .claude"
 
-11. Install project dependencies:
-   - Navigate into the project directory: "cd ${project_name}"
-   - Make it executable (macOS/Linux): "chmod +x gradlew"
-   - Install dependencies and sync project:
-     * Run: "./gradlew assembleDebug" (macOS/Linux) or "gradlew.bat assembleDebug" (Windows)
-     * This will download all required dependencies.
-   - Run an android test to verify the installation: "tsx test-android.ts {pwd / PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME//./\/} SvgIconExampleTest testSvgIconExampleDisplaysAllElements".
+3. Invoke newly installed setup-project skill.
 
 IMPORTANT NOTES:
 - If any installation step fails, provide clear error messages and suggest troubleshooting steps.
