@@ -253,12 +253,6 @@ if ! check_command "node"; then
 fi
 node --version
 
-write_step "Checking tsx"
-if ! check_command "tsx"; then
-    echo "tsx not found. Installing via npm..."
-    npm install -g tsx
-fi
-tsx --version
 
 # 6. Install ffmpeg
 write_step "Checking ffmpeg"
@@ -303,7 +297,7 @@ else
     
     cd "$PROJECT_NAME"
     echo "Rebranding to $PROJECT_NAME ($PACKAGE_NAME)..."
-    tsx rebrand.ts "$PROJECT_NAME" "$PACKAGE_NAME"
+    npx tsx rebrand.ts "$PROJECT_NAME" "$PACKAGE_NAME"
     
     git add .
     if ! git commit -m "Rebrand project to $PROJECT_NAME and $PACKAGE_NAME"; then
@@ -327,7 +321,7 @@ fi
 echo "Running android test..."
 TEST_ANDROID_SCRIPT=".claude/skills/run-android-test/test-android.ts"
 if [ -f "$CURRENT_DIR/$TEST_ANDROID_SCRIPT" ]; then
-    tsx "$CURRENT_DIR/$TEST_ANDROID_SCRIPT" "$CURRENT_DIR/$PROJECT_NAME" "$PACKAGE_NAME" SvgIconExampleTest testSvgIconExampleDisplaysAllElements
+    npx tsx "$CURRENT_DIR/$TEST_ANDROID_SCRIPT" "$CURRENT_DIR/$PROJECT_NAME" "$PACKAGE_NAME" SvgIconExampleTest testSvgIconExampleDisplaysAllElements
 else
     echo "Warning: test-android.ts not found at $TEST_ANDROID_SCRIPT. Skipping test."
 fi

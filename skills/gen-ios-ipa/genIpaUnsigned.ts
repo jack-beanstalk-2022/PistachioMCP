@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 /**
- * Usage: tsx genIpaUnsigned.ts [project_dir] [app_name] [export_path]
+ * Usage: npx tsx genIpaUnsigned.ts [project_dir] [app_name] [export_path]
  * Pass path to Pistachio project. app_name must match iosApp/Configuration/Config.xcconfig. IPA is written to export_path (default: project_dir).
  */
 

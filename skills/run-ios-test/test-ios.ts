@@ -107,7 +107,7 @@ export function parseArgs(argv?: string[]): ParseArgsResult {
         return {
             ok: false,
             message:
-                "Usage: tsx test-ios.ts <project_dir> <test_name>\n\nExample:\n  tsx test-ios.ts /path/to/iosApp testScrollingDownGesture",
+                "Usage: npx tsx test-ios.ts <project_dir> <test_name>\n\nExample:\n  npx tsx test-ios.ts /path/to/iosApp testScrollingDownGesture",
         };
     }
 

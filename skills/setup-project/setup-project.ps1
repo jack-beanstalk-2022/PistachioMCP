@@ -237,13 +237,6 @@ if (-not (Check-Command "node")) {
 }
 node --version
 
-Write-Step "Checking tsx"
-if (-not (Check-Command "tsx")) {
-    Write-Host "tsx not found. Installing via npm..."
-    npm install -g tsx
-    Refresh-Path
-}
-tsx --version
 
 # 6. Install ffmpeg
 Write-Step "Checking ffmpeg"
@@ -264,7 +257,7 @@ if (Test-Path $ProjectName) {
     
     Push-Location $ProjectName
     Write-Host "Rebranding to $ProjectName ($PackageName)..."
-    tsx rebrand.ts $ProjectName $PackageName
+    npx tsx rebrand.ts $ProjectName $PackageName
     
     git add .
     git commit -m "Rebrand project to $ProjectName and $PackageName" 2>&1 | Out-Null
@@ -288,7 +281,7 @@ Write-Host "Running android test..."
 $testAndroidScript = Join-Path $ScriptRoot ".claude\skills\run-android-test\test-android.ts"
 $projectDir = Join-Path $ScriptRoot $ProjectName
 if (Test-Path $testAndroidScript) {
-    tsx $testAndroidScript $projectDir $PackageName SvgIconExampleTest testSvgIconExampleDisplaysAllElements
+    npx tsx $testAndroidScript $projectDir $PackageName SvgIconExampleTest testSvgIconExampleDisplaysAllElements
 } else {
     Write-Host "Warning: test-android.ts not found at $testAndroidScript. Skipping test." -ForegroundColor Yellow
 }

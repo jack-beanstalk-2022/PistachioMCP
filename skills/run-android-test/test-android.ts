@@ -57,7 +57,7 @@ export function parseArgs(argv?: string[]): ParseArgsResult {
         return {
             ok: false,
             message:
-                "Usage: tsx test-android.ts <project_dir> <package_name> <test_suite_name> <test_name>\n\nExample:\n  tsx test-android.ts /path/to/project com.jetbrains.kmpapp ListScreenExampleTest testListScreenDisplaysContentAndScrolling",
+                "Usage: npx tsx test-android.ts <project_dir> <package_name> <test_suite_name> <test_name>\n\nExample:\n  npx tsx test-android.ts /path/to/{PISTACHIO_PROJECT_NAME} {PISTACHIO_PACKAGE_NAME} SvgIconExampleTest testSvgIconExampleDisplaysAllElements",
         };
     }
 
