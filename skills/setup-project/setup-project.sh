@@ -164,8 +164,16 @@ else
     CMDLINE_TOOLS_OS="linux"
 fi
 
+# If ANDROID_HOME is not set, try default location (SDK often installed there by Android Studio)
+ANDROID_HOME_WAS_UNSET=
 if [ -z "$ANDROID_HOME" ]; then
-    export ANDROID_HOME="$DEFAULT_ANDROID_HOME"
+    ANDROID_HOME_WAS_UNSET=1
+    if [ -d "$DEFAULT_ANDROID_HOME" ] && { [ -d "$DEFAULT_ANDROID_HOME/platform-tools" ] || [ -d "$DEFAULT_ANDROID_HOME/build-tools" ] || [ -d "$DEFAULT_ANDROID_HOME/cmdline-tools" ]; }; then
+        export ANDROID_HOME="$DEFAULT_ANDROID_HOME"
+        echo "ANDROID_HOME was not set; using existing SDK at $ANDROID_HOME"
+    else
+        export ANDROID_HOME="$DEFAULT_ANDROID_HOME"
+    fi
 fi
 
 ANDROID_SDK_INSTALLED_BY_SCRIPT=
@@ -194,7 +202,8 @@ if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
     export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
     echo "ANDROID_HOME: $ANDROID_HOME"
 fi
-if [ -n "$ANDROID_SDK_INSTALLED_BY_SCRIPT" ] && [ -n "$ANDROID_HOME" ]; then
+# Persist ANDROID_HOME when we installed the SDK or when it was unset and we're using the discovered/default path
+if [ -n "$ANDROID_HOME" ] && { [ -n "$ANDROID_SDK_INSTALLED_BY_SCRIPT" ] || [ -n "$ANDROID_HOME_WAS_UNSET" ]; }; then
     persist_to_rc "Added by setup-project.sh - ANDROID_HOME and PATH" \
         "export ANDROID_HOME=\"$ANDROID_HOME\"" \
         "export PATH=\"\$ANDROID_HOME/platform-tools:\$ANDROID_HOME/emulator:\$ANDROID_HOME/cmdline-tools/latest/bin:\$PATH\""

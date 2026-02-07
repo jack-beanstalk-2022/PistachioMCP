@@ -131,7 +131,21 @@ if ($javaInstalledByScript -and $env:JAVA_HOME) {
 # 3. Install Android SDK
 Write-Step "Checking Android SDK"
 $defaultAndroidHome = "$env:LOCALAPPDATA\Android\Sdk"
-if (-not $env:ANDROID_HOME) { $env:ANDROID_HOME = $defaultAndroidHome }
+$androidHomeWasUnset = $false
+if (-not $env:ANDROID_HOME) {
+    $androidHomeWasUnset = $true
+    if (Test-Path $defaultAndroidHome) {
+        $hasSdkContent = (Test-Path "$defaultAndroidHome\platform-tools") -or (Test-Path "$defaultAndroidHome\build-tools") -or (Test-Path "$defaultAndroidHome\cmdline-tools")
+        if ($hasSdkContent) {
+            $env:ANDROID_HOME = $defaultAndroidHome
+            Write-Host "ANDROID_HOME was not set; using existing SDK at $env:ANDROID_HOME"
+        } else {
+            $env:ANDROID_HOME = $defaultAndroidHome
+        }
+    } else {
+        $env:ANDROID_HOME = $defaultAndroidHome
+    }
+}
 
 $androidSdkInstalledByScript = $false
 $sdkManagerPath = "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat"
@@ -189,7 +203,8 @@ if ($pathChanged) {
 if ($env:ANDROID_HOME -and (Test-Path $env:ANDROID_HOME)) {
     Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 }
-if ($androidSdkInstalledByScript -and $env:ANDROID_HOME) {
+# Persist ANDROID_HOME when we installed the SDK or when it was unset and we're using the discovered/default path
+if ($env:ANDROID_HOME -and ($androidSdkInstalledByScript -or $androidHomeWasUnset)) {
     Persist-ToProfile -Marker "Added by setup-project.ps1 - ANDROID_HOME and PATH" -Lines @(
         "`$env:ANDROID_HOME = `"$env:ANDROID_HOME`"",
         "`$env:Path = `"`$env:ANDROID_HOME\platform-tools;`$env:ANDROID_HOME\emulator;`$env:ANDROID_HOME\cmdline-tools\latest\bin;`$env:Path`""
